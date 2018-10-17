@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="杨凯文" />
+
+
+
+<meta name="description" content="前言​    因为自己对数据的可靠性，可用性方面特别感兴趣，所以在MySQL事务方面看了很多资料，也看了很多博客，所以想到自己也写一篇博客整理整理自己所学内容，尽量用自己的语言解释得通俗易懂。">
+<meta name="keywords" content="Java,MySQL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL事务原理浅析">
+<meta property="og:url" content="http://yangkw.github.io/2018/05/06/事务/index.html">
+<meta property="og:site_name" content="Kevin&#39;s Blog">
+<meta property="og:description" content="前言​    因为自己对数据的可靠性，可用性方面特别感兴趣，所以在MySQL事务方面看了很多资料，也看了很多博客，所以想到自己也写一篇博客整理整理自己所学内容，尽量用自己的语言解释得通俗易懂。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-10-05T15:11:13.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL事务原理浅析">
+<meta name="twitter:description" content="前言​    因为自己对数据的可靠性，可用性方面特别感兴趣，所以在MySQL事务方面看了很多资料，也看了很多博客，所以想到自己也写一篇博客整理整理自己所学内容，尽量用自己的语言解释得通俗易懂。">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Kevin&#39;s Blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>MySQL事务原理浅析 | Kevin&#39;s Blog</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?8cec84d631c2e9b50fa5c523c42c9d8b";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">杨凯文</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">因为相信, 所以看见</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:kw89@qq.com" title="Email"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 知乎" href="https://www.zhihu.com/people/yangkw/activities" title="知乎"></a>
+                            
+                                <a class="fa SegmentFault" href="https://segmentfault.com/u/yangkw" title="SegmentFault"></a>
+                            
+                                <a class="fa Coding" href="https://github.com/yangkw" title="Coding"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">与世界分享收获与见解</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">杨凯文</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">杨凯文</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">因为相信, 所以看见</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:kw89@qq.com" title="Email"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 知乎" target="_blank" href="https://www.zhihu.com/people/yangkw/activities" title="知乎"></a>
+                            
+                                <a class="fa SegmentFault" target="_blank" href="https://segmentfault.com/u/yangkw" title="SegmentFault"></a>
+                            
+                                <a class="fa Coding" target="_blank" href="https://github.com/yangkw" title="Coding"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-事务" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/05/06/事务/" class="article-date">
+      <time datetime="2018-05-06T04:20:53.000Z" itemprop="datePublished">2018-05-06</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      MySQL事务原理浅析
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>​    因为自己对数据的可靠性，可用性方面特别感兴趣，所以在MySQL事务方面看了很多资料，也看了很多博客，所以想到自己也写一篇博客整理整理自己所学内容，尽量用自己的语言解释得通俗易懂。<br><a id="more"></a></p>
+<h3 id="事务经典场景"><a href="#事务经典场景" class="headerlink" title="事务经典场景"></a>事务经典场景</h3><p>​    在很多介绍事务的博客都会代入这样一个场景，先简单说说：</p>
+<p>​    A给B转账100，A少100，B多100。如果A少100后系统崩溃怎么办？B的钱多不了，这样金钱总数凭空少了100。这里就需要用到事务了。</p>
+<h3 id="什么是事务？"><a href="#什么是事务？" class="headerlink" title="什么是事务？"></a>什么是事务？</h3><p>​    事务是恢复和<a href="https://baike.baidu.com/item/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6" target="_blank" rel="noopener">并发控制</a>的基本单位，事务有四个特性（ACID），原子性（Atomicity），一致性（Consistency），隔离性（Isolation），持久性（Durability）。本文主要围绕这四个特性展开介绍。</p>
+<h3 id="原子性"><a href="#原子性" class="headerlink" title="原子性"></a>原子性</h3><p>​    原子性就是不可拆分的特性，要么全部成功然后提交(commit)，要么全部失败然后回滚（rollback）。若开启事务，在上述场景就不会出现 A少100 成功，B多100 失败 这种情况。MySQL通过Redo Log重做日志实现了原子性，在将执行SQL语句时，会先写入redo log buffer，再执行SQL语句，若SQL语句执行出错就会根据redo log buffer中的记录来执行回滚操作，由此拥有原子性。</p>
+<h3 id="一致性"><a href="#一致性" class="headerlink" title="一致性"></a>一致性</h3><p>​    一致性指事务将数据库从一种状态转变为下一种一致的状态。比如有一个字段name有唯一索引约束，那么在事务前后都不能有重复的name出现违反唯一索引约束，否则回滚。在上述场景中即金钱总数总是200，不能凭空增加减少。MySQL通过undo Log实现一致性，执行SQL语句时，会先写入undo log再写入 redo log buffer。undo是逻辑日志，会根据之前的SQL语句进行相应回滚，比如之前是insert那么回滚时会执行一个delete，一个update会执行 一个相反的update。并且除了回滚，undo log还有一个作用是MVCC，当用户读取一行记录时，若该记录已经被其他事务占用，当前事务可通过undo读取之前的行版本信息，实现非锁定读取。<strong>并且undo log也会产生redo log，因为undo log也需要持久性的保护。</strong></p>
+<h3 id="隔离性"><a href="#隔离性" class="headerlink" title="隔离性"></a>隔离性</h3><p>​    首先介绍如果没有隔离性会发生的4种情况</p>
+<h5 id="丢失更新"><a href="#丢失更新" class="headerlink" title="丢失更新"></a>丢失更新</h5><p>​        A事务撤销时，把已经提交的B事务的更新数据覆盖了。这种错误可能造成很严重的问题，通过下面的账户取款转账就可以看出来，MySQL通过三级封锁协议的第一级解决了丢失更新，事务 T 要修改数据 A 时必须加 X 锁，直到 T 结束才释放锁。</p>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>取款事务A</th>
+<th>转账事务B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1</td>
+<td><strong>开始事务</strong></td>
+<td><strong> </strong></td>
+</tr>
+<tr>
+<td>T2</td>
+<td></td>
+<td><strong>开始事务</strong></td>
+</tr>
+<tr>
+<td>T3</td>
+<td>查询账户余额为1000元</td>
+<td></td>
+</tr>
+<tr>
+<td>T4</td>
+<td></td>
+<td>查询账户余额为1000元</td>
+</tr>
+<tr>
+<td>T5</td>
+<td></td>
+<td>汇入100元把余额改为1100元</td>
+</tr>
+<tr>
+<td>T6</td>
+<td></td>
+<td><strong>提交事务</strong></td>
+</tr>
+<tr>
+<td>T7</td>
+<td>取出100元把余额改为900元</td>
+<td></td>
+</tr>
+<tr>
+<td>T8</td>
+<td><strong>撤销事务</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>T9</td>
+<td><strong>余额恢复为1000</strong> <strong>元（丢失更新）</strong></td>
+</tr>
+</tbody>
+</table>
+<h5 id="脏读"><a href="#脏读" class="headerlink" title="脏读"></a>脏读</h5><p>​    脏读主要是读取到了其他事务的数据，而其他事务随后发生回滚。MySQL通过三级封锁协议的第二级解决了脏读，在一级的基础上，要求读取数据 A 时必须加 S 锁，读取完马上释放 S 锁。</p>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>取款事务A</th>
+<th>转账事务B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1</td>
+<td><strong>开始事务</strong></td>
+<td><strong> </strong></td>
+</tr>
+<tr>
+<td>T2</td>
+<td></td>
+<td><strong>开始事务</strong></td>
+</tr>
+<tr>
+<td>T3</td>
+<td>查询账户余额为1000元</td>
+<td></td>
+</tr>
+<tr>
+<td>T4</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>T5</td>
+<td></td>
+<td>汇入100元把余额改为1100元</td>
+</tr>
+<tr>
+<td>T6</td>
+<td>查询账户余额为1100元<strong>（脏读）</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>T7</td>
+<td></td>
+<td><strong>撤销事务</strong></td>
+</tr>
+<tr>
+<td>T8</td>
+<td>汇入100元以为是1200元</td>
+</tr>
+</tbody>
+</table>
+<h5 id="不可重复读"><a href="#不可重复读" class="headerlink" title="不可重复读"></a>不可重复读</h5><p>​    不可重复读是读取到数据后，随后其他事务对数据发生了<strong>修改</strong>，无法再次读取。MySQL通过三级封锁协议的第三级解决了不可重复读。在二级的基础上，要求读取数据 A 时必须加 S 锁，直到事务结束了才能释放 S 锁。</p>
+<table>
+<thead>
+<tr>
+<th><strong>时间</strong></th>
+<th>取款事务A</th>
+<th>转账事务B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1</td>
+<td><strong>开始事务</strong></td>
+<td><strong> </strong></td>
+</tr>
+<tr>
+<td>T2</td>
+<td></td>
+<td><strong>开始事务</strong></td>
+</tr>
+<tr>
+<td>T3</td>
+<td>查询账户余额为1000元</td>
+<td></td>
+</tr>
+<tr>
+<td>T4</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>T5</td>
+<td></td>
+<td>汇入100元把余额改为1100元</td>
+</tr>
+<tr>
+<td>T6</td>
+<td>查询账户余额为1100元<strong>（不可重复读）</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>T7</td>
+<td></td>
+<td><strong>提交事务</strong></td>
+</tr>
+<tr>
+<td>T8</td>
+<td><strong>提交事务</strong></td>
+</tr>
+</tbody>
+</table>
+<h5 id="幻读"><a href="#幻读" class="headerlink" title="幻读"></a>幻读</h5><p>​    幻读是读取到数据后，随后其他事务对数据发生了<strong>新增</strong>，无法再次读取。在InnoDB引擎Repeatable Read的隔离级别下，MySQL通过Next-Key Lock以及MVCC解决了幻读，事务中分为当前读以及快照读。</p>
+<p><strong>1.快照读(snapshot read)</strong>  ——通过MVCC来避免幻读</p>
+<p>简单的select操作(不包括 select … lock in share mode, select … for update)</p>
+<p><strong>2.当前读(current read)</strong>  ——通过Next-Key Lock 来避免幻读  Next-Key Lock即间隙锁（Gap Lock）+行锁 （Record Lock） </p>
+<p>select … lock in share mode</p>
+<p>select … for update</p>
+<p>insert</p>
+<p>update</p>
+<p>delete</p>
+<table>
+<thead>
+<tr>
+<th><strong><strong>时间</strong></strong></th>
+<th>取款事务A</th>
+<th>转账事务B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1</td>
+<td><strong>开始事务</strong></td>
+<td><strong> </strong></td>
+</tr>
+<tr>
+<td>T2</td>
+<td></td>
+<td><strong>开始事务</strong></td>
+</tr>
+<tr>
+<td>T3</td>
+<td>查询账户余额为1000元 RMB 100元美元</td>
+<td></td>
+</tr>
+<tr>
+<td>T4</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>T5</td>
+<td></td>
+<td>汇入100欧元</td>
+</tr>
+<tr>
+<td>T6</td>
+<td>查询账户余额为1000元 RMB 100元美元 100欧元<strong>（幻读）</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>T7</td>
+<td></td>
+<td><strong>提交事务</strong></td>
+</tr>
+<tr>
+<td>T8</td>
+<td><strong>提交事务</strong></td>
+</tr>
+</tbody>
+</table>
+<p>​    事务有四个隔离级别</p>
+<h5 id="Read-Uncommitted"><a href="#Read-Uncommitted" class="headerlink" title="Read Uncommitted"></a>Read Uncommitted</h5><p>​    解决了丢失更新</p>
+<h5 id="Read-Committed"><a href="#Read-Committed" class="headerlink" title="Read Committed"></a>Read Committed</h5><p>​    解决了丢失更新+脏读</p>
+<h5 id="Repeatable-Read"><a href="#Repeatable-Read" class="headerlink" title="Repeatable Read"></a>Repeatable Read</h5><p>​    解决了丢失更新+脏读+不可重复读 （Innodb下也解决了幻读，原理上文已说明）</p>
+<h5 id="Serializable"><a href="#Serializable" class="headerlink" title="Serializable"></a>Serializable</h5><p>​    解决了丢失更新+脏读+不可重复读+幻读</p>
+<p><strong>从上至下，性能越差，安全性越优。</strong></p>
+<h3 id="持久性"><a href="#持久性" class="headerlink" title="持久性"></a>持久性</h3><p>一旦事务提交，则其所做的修改就会永久保存到数据库中。此时即使系统崩溃，修改的数据也不会丢失。具体实现原理就是在事务commit之前会将，redo log buffer中的数据持久化到硬盘中的redo log file，这样在commit的时候，硬盘中已经有了我们修改或新增的数据，由此做到持久化。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>​    简单总结了一下MySQL事务，对于Redo Undo没有做到了如指掌的掌握所以介绍篇幅不太大，随着学习深入以后会进行相应补充。</p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p>—–《MySQL技术内幕 InnoDB存储引擎》 第2版</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018/05/06/事务/">MySQL事务原理浅析</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">杨凯文</a></p>
+        <p><span>发布时间:</span>2018-05-06, 12:20:53</p>
+        <p><span>最后更新:</span>2018-10-05, 23:11:13</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018/05/06/事务/" title="MySQL事务原理浅析">http://yangkw.github.io/2018/05/06/事务/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yangkw.github.io/2018/05/06/事务/　　作者: 杨凯文" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2018/05/22/几行代码实现RPC框架/">
+                    几行代码实现RPC框架
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018/04/12/大三Java实习总结网易百度小米美团阿里/">
+                    Java实习总结网易百度小米美团阿里
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#事务经典场景"><span class="toc-number">2.</span> <span class="toc-text">事务经典场景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是事务？"><span class="toc-number">3.</span> <span class="toc-text">什么是事务？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#原子性"><span class="toc-number">4.</span> <span class="toc-text">原子性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#一致性"><span class="toc-number">5.</span> <span class="toc-text">一致性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#隔离性"><span class="toc-number">6.</span> <span class="toc-text">隔离性</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#丢失更新"><span class="toc-number">6.0.1.</span> <span class="toc-text">丢失更新</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#脏读"><span class="toc-number">6.0.2.</span> <span class="toc-text">脏读</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#不可重复读"><span class="toc-number">6.0.3.</span> <span class="toc-text">不可重复读</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#幻读"><span class="toc-number">6.0.4.</span> <span class="toc-text">幻读</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Read-Uncommitted"><span class="toc-number">6.0.5.</span> <span class="toc-text">Read Uncommitted</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Read-Committed"><span class="toc-number">6.0.6.</span> <span class="toc-text">Read Committed</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Repeatable-Read"><span class="toc-number">6.0.7.</span> <span class="toc-text">Repeatable Read</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Serializable"><span class="toc-number">6.0.8.</span> <span class="toc-text">Serializable</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#持久性"><span class="toc-number">7.</span> <span class="toc-text">持久性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">8.</span> <span class="toc-text">总结</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考资料"><span class="toc-number">9.</span> <span class="toc-text">参考资料</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"MySQL事务原理浅析　| Kevin's Blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2018/05/22/几行代码实现RPC框架/" title="上一篇: 几行代码实现RPC框架">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018/04/12/大三Java实习总结网易百度小米美团阿里/" title="下一篇: Java实习总结网易百度小米美团阿里">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/08/24/IO/">通过IO模型带来的思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/01/Spring-IOC源码跟踪记录/">Spring IOC源码跟踪记录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/22/几行代码实现RPC框架/">几行代码实现RPC框架</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/06/事务/">MySQL事务原理浅析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/12/大三Java实习总结网易百度小米美团阿里/">Java实习总结网易百度小米美团阿里</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/11/11/利用反射及循环构造Bean的一次实践/">利用反射及循环构造Bean的一次实践</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/11/01/读书笔记之JVM垃圾回收/">读书笔记整理之JVM垃圾回收</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/10/18/网易考拉海购Java后台开发实习-面经（已拿offer）/">网易考拉海购Java后台开发实习-面经（已拿offer）</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/10/12/Java并发编程-volatile可见性的介绍/">Java并发编程-volatile可见性的介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/09/15/浅析MySQL中的explain参数/">浅析MySQL语句优化中的explain参数</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/29/看得懂的常见排序算法分析(java实现)/">常见排序算法分析Java实现(内附大量注释)</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/04/条件队列的唤醒机制探究/">条件队列的唤醒机制探究</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/07/28/并发编程笔记/">并发编程笔记</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2017-2018 杨凯文
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 2;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+            
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

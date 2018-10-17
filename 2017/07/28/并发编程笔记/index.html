@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="杨凯文" />
+
+
+
+<meta name="description" content="Semaphore可以控制某个资源可被同时访问的个数，通过 acquire() 获取一个许可，如果没有就等待，而 release() 释放一个许可。 闭锁用于所有线程等待一个外部事件的发生；栅栏则是所有线程相互等待，直到所有线程都到达某一点时才打开栅栏，然后线程可以继续执行。 while(true) 被底层调用，运算特别快 某些操作来不及进行">
+<meta name="keywords" content="Java,读书笔记">
+<meta property="og:type" content="article">
+<meta property="og:title" content="并发编程笔记">
+<meta property="og:url" content="http://yangkw.github.io/2017/07/28/并发编程笔记/index.html">
+<meta property="og:site_name" content="Kevin&#39;s Blog">
+<meta property="og:description" content="Semaphore可以控制某个资源可被同时访问的个数，通过 acquire() 获取一个许可，如果没有就等待，而 release() 释放一个许可。 闭锁用于所有线程等待一个外部事件的发生；栅栏则是所有线程相互等待，直到所有线程都到达某一点时才打开栅栏，然后线程可以继续执行。 while(true) 被底层调用，运算特别快 某些操作来不及进行">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-10-05T15:11:13.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="并发编程笔记">
+<meta name="twitter:description" content="Semaphore可以控制某个资源可被同时访问的个数，通过 acquire() 获取一个许可，如果没有就等待，而 release() 释放一个许可。 闭锁用于所有线程等待一个外部事件的发生；栅栏则是所有线程相互等待，直到所有线程都到达某一点时才打开栅栏，然后线程可以继续执行。 while(true) 被底层调用，运算特别快 某些操作来不及进行">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Kevin&#39;s Blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>并发编程笔记 | Kevin&#39;s Blog</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?8cec84d631c2e9b50fa5c523c42c9d8b";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">杨凯文</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">因为相信, 所以看见</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:kw89@qq.com" title="Email"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 知乎" href="https://www.zhihu.com/people/yangkw/activities" title="知乎"></a>
+                            
+                                <a class="fa SegmentFault" href="https://segmentfault.com/u/yangkw" title="SegmentFault"></a>
+                            
+                                <a class="fa Coding" href="https://github.com/yangkw" title="Coding"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">与世界分享收获与见解</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">杨凯文</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">杨凯文</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">因为相信, 所以看见</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:kw89@qq.com" title="Email"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 知乎" target="_blank" href="https://www.zhihu.com/people/yangkw/activities" title="知乎"></a>
+                            
+                                <a class="fa SegmentFault" target="_blank" href="https://segmentfault.com/u/yangkw" title="SegmentFault"></a>
+                            
+                                <a class="fa Coding" target="_blank" href="https://github.com/yangkw" title="Coding"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-并发编程笔记" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2017/07/28/并发编程笔记/" class="article-date">
+      <time datetime="2017-07-28T07:09:53.000Z" itemprop="datePublished">2017-07-28</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      并发编程笔记
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/读书笔记/">读书笔记</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <ol>
+<li>Semaphore可以控制某个资源可被同时访问的个数，通过 acquire() 获取一个许可，如果没有就等待，而 release() 释放一个许可。</li>
+<li>闭锁用于所有线程等待一个外部事件的发生；栅栏则是所有线程相互等待，直到所有线程都到达某一点时才打开栅栏，然后线程可以继续执行。</li>
+<li>while(true) 被底层调用，运算特别快 某些操作来不及进行</li>
+</ol>
+<a id="more"></a>
+<ol start="4">
+<li><p>使用Calable接口实现并发的时候，需要用FutureTask实现类来接收返回的值,<br>FutureTask 是Futre接口的实现类<br>futureTask.get()</p>
+</li>
+<li><p>非静态方法的锁默认是this，静态方法的锁为 对应的Class实例</p>
+</li>
+<li><p>ThreadPoolExecutor 是线程池的实现类<br>ScheduledExecutorService 子接口 负责线程的调度<br>ScheduledThreadPoolExecutor 负责线程调度的线程池实现类</p>
+</li>
+<li><p>ExecutorService pool=Executors.newFixedtThreadPool（5）：<br>pool.submit( Runnable);<br>pool.shutdown ;</p>
+</li>
+<li><p>interrupt方法能中断目标线程，而isInterrupted方法能返回目标线程的中断状态，静态的interrupted方法将清除当前线程的中断状态，也是清除中断状态的唯一一个方法。</p>
+</li>
+<li><p>awaitTermination()，service.awaitTermination(10,TIMEUNIT.SECONDS),等待service中的线程执行10s，进入阻塞状态，如果线程5s就执行完了，则解除阻塞状态，执行后续代码，若10s线程还未执行完毕，则执行后续代码。（和外卖送餐的情景类似）</p>
+</li>
+<li><p>interrupt方法能中断目标线程，而isInterrupted方法能返回目标线程的中断状态，静态的interrupted方法将清除当前线程的中断状态，也是清除中断状态的唯一一个方法。</p>
+</li>
+<li><p>ThreadLocal可以理解为将对象的作用范围限制在一个线程上下文中，使得变量的作用域为“线程级”。</p>
+</li>
+<li><p>有三种方式可以降低锁的竞争程度<br>1.减少锁的持有时间<br>2.降低锁的请求频率<br>3.使用带有协调机制的独占锁，这些机制允许更高的并发性。</p>
+</li>
+<li><p>可重入锁 意味着进入一个房间一直拿着钥匙，这把钥匙可以开之后的门。 不可重入锁 意味着进入一个门 就不再携带钥匙</p>
+</li>
+<li><p>公平锁与非公平锁的理解：<br>有一个state变量，初始值为0，假设当前线程为A,每当A获取一次锁，status++. 释放一次，status–.锁会记录当前持有的线程。当A线程拥有锁的时候，status&gt;0. B线程尝试获取锁的时候会对这个status有一个CAS(0,1)的操作，尝试几次失败后就挂起线程，进入一个等待队列。如果A线程恰好释放，–status==0, A线程会去唤醒等待队列中第一个线程，即刚刚进入等待队列的B线程，B线程被唤醒之后回去检查这个status的值，尝试CAS(0,1),而如果这时恰好C线程也尝试去争抢这把锁非公平锁实现：C直接尝试对这个status CAS(0,1)操作，并成功改变了status的值，B线程获取锁失败，再次挂起，这就是非公平锁，B在C之前尝试获取锁，而最终是C抢到了锁。公平锁：C发现有线程在等待队列，直接将自己进入等待队列并挂起,B获取锁</p>
+</li>
+<li><p>在wait()外嵌套while循环 可以防止虚假唤醒</p>
+</li>
+<li><p>只有当任务相互独立时，为线程池或工作队列设置界限才是合理的，如果任务之间存在依赖性，那么有界的线程池或队列就可能导致线程“饥饿”死锁问题，此时应使用无界线程池newCachedThreadPool</p>
+</li>
+<li><p>从list中遍历的每个Future对象并不一定处于完成状态，这时调用get()方法就会被阻塞住，如果系统是设计成每个线程完成后就能根据其结果继续做后面的事，这样对于处于list后面的但是先完成的线程就会增加了额外的等待时间。<br>而CompletionService的实现是维护一个保存Future对象的BlockingQueue。只有当这个Future对象状态是结束的时候，才会加入到这个Queue中，take()方法其实就是Producer-Consumer中的Consumer。它会从Queue中取出Future对象，如果Queue是空的，就会阻塞在那里，直到有完成的Future对象加入到Queue中.CompletionService采取的是BlockingQueue&lt;Future<v>&gt;无界队列来管理Future。则有一个线程执行完毕把返回结果放到BlockingQueue&lt;Future<v>&gt;里面。就可以通过completionServcie.take().get()取出结果。</v></v></p>
+</li>
+</ol>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2017/07/28/并发编程笔记/">并发编程笔记</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">杨凯文</a></p>
+        <p><span>发布时间:</span>2017-07-28, 15:09:53</p>
+        <p><span>最后更新:</span>2018-10-05, 23:11:13</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2017/07/28/并发编程笔记/" title="并发编程笔记">http://yangkw.github.io/2017/07/28/并发编程笔记/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yangkw.github.io/2017/07/28/并发编程笔记/　　作者: 杨凯文" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2017/08/04/条件队列的唤醒机制探究/">
+                    条件队列的唤醒机制探究
+                </a>
+            </div>
+        
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"并发编程笔记　| Kevin's Blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2017/08/04/条件队列的唤醒机制探究/" title="上一篇: 条件队列的唤醒机制探究">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/08/24/IO/">通过IO模型带来的思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/01/Spring-IOC源码跟踪记录/">Spring IOC源码跟踪记录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/22/几行代码实现RPC框架/">几行代码实现RPC框架</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/06/事务/">MySQL事务原理浅析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/12/大三Java实习总结网易百度小米美团阿里/">Java实习总结网易百度小米美团阿里</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/11/11/利用反射及循环构造Bean的一次实践/">利用反射及循环构造Bean的一次实践</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/11/01/读书笔记之JVM垃圾回收/">读书笔记整理之JVM垃圾回收</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/10/18/网易考拉海购Java后台开发实习-面经（已拿offer）/">网易考拉海购Java后台开发实习-面经（已拿offer）</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/10/12/Java并发编程-volatile可见性的介绍/">Java并发编程-volatile可见性的介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/09/15/浅析MySQL中的explain参数/">浅析MySQL语句优化中的explain参数</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/29/看得懂的常见排序算法分析(java实现)/">常见排序算法分析Java实现(内附大量注释)</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/04/条件队列的唤醒机制探究/">条件队列的唤醒机制探究</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/07/28/并发编程笔记/">并发编程笔记</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2017-2018 杨凯文
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 2;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+            
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

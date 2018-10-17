@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="杨凯文" />
+
+
+
+<meta name="description" content="昨天阿里HR面完，目前在等结果的阶段，无论结果如何都能接收，作为一名本科生能和各个名校的技术人同场竞技并且没有被中途淘汰，也很荣幸。">
+<meta name="keywords" content="Java,面试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java实习总结网易百度小米美团阿里">
+<meta property="og:url" content="http://yangkw.github.io/2018/04/12/大三Java实习总结网易百度小米美团阿里/index.html">
+<meta property="og:site_name" content="Kevin&#39;s Blog">
+<meta property="og:description" content="昨天阿里HR面完，目前在等结果的阶段，无论结果如何都能接收，作为一名本科生能和各个名校的技术人同场竞技并且没有被中途淘汰，也很荣幸。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-10-07T02:45:40.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java实习总结网易百度小米美团阿里">
+<meta name="twitter:description" content="昨天阿里HR面完，目前在等结果的阶段，无论结果如何都能接收，作为一名本科生能和各个名校的技术人同场竞技并且没有被中途淘汰，也很荣幸。">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Kevin&#39;s Blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>Java实习总结网易百度小米美团阿里 | Kevin&#39;s Blog</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?8cec84d631c2e9b50fa5c523c42c9d8b";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">杨凯文</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">因为相信, 所以看见</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:kw89@qq.com" title="Email"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 知乎" href="https://www.zhihu.com/people/yangkw/activities" title="知乎"></a>
+                            
+                                <a class="fa SegmentFault" href="https://segmentfault.com/u/yangkw" title="SegmentFault"></a>
+                            
+                                <a class="fa Coding" href="https://github.com/yangkw" title="Coding"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">与世界分享收获与见解</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">杨凯文</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">杨凯文</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">因为相信, 所以看见</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:kw89@qq.com" title="Email"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 知乎" target="_blank" href="https://www.zhihu.com/people/yangkw/activities" title="知乎"></a>
+                            
+                                <a class="fa SegmentFault" target="_blank" href="https://segmentfault.com/u/yangkw" title="SegmentFault"></a>
+                            
+                                <a class="fa Coding" target="_blank" href="https://github.com/yangkw" title="Coding"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-大三Java实习总结网易百度小米美团阿里" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/04/12/大三Java实习总结网易百度小米美团阿里/" class="article-date">
+      <time datetime="2018-04-12T15:59:53.000Z" itemprop="datePublished">2018-04-12</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Java实习总结网易百度小米美团阿里
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/面试/">面试</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>昨天阿里HR面完，目前在等结果的阶段，无论结果如何都能接收，作为一名本科生能和各个名校的技术人同场竞技并且没有被中途淘汰，也很荣幸。<br><a id="more"></a><br>​     除了阿里，其余公司目前都已经拿过offer<br>​     2017年10月 网易考拉 Java<br>​           12月 百度 Java<br>​     2018年 1月 小米人工智能云平台 Java(已实习过)<br>​            3月 美团外卖 Java</p>
+<p> 总的来说面试无非要做到两点：1.别人答不上的，你得知道 2.别人答得上的，你得知道的更多！包括但不限于（Java多线程，锁，SSM源码，并发包，各类集合框架，MySQL索引调优，事务，MVCC，Redis相关内容，JVM垃圾回收，内存模型，类加载机制）</p>
+<p> 网易：<br>​     人生第一次面试就是接的网易，第一次特别紧张，声音都在抖，然后面试官也感觉到了也说了出来，好在中途不是太紧张也回答的可以，一面就过了，二面的时候基本是问的基础也基本都答上来了，后来面试官评价是（基础较好，了解的比较全面）知识点大致是：集合框架，线程池，ThreadLocal，Cookie Session,RDB AOF等。（基础回答的好）</p>
+<p> 百度：<br>​     说实话没想到百度会给我打面试电话，毕竟是BAT，在我心中地位还是很高的。一面总共68分钟，前期是问项目，问的超级细致，我一句他一句。在项目中我的考虑也算周到，估计他也很满意。不过后期问Java基础的时候答得相对更好，回答Synchronized Lock区别的时候都是从JVM到操作系统到API统一回答，当时答完就问我，这些你都是自学的么？我就说我看书看到的，他说你愿意去看这么多书也还是很好了。后面差不多问了IOC AOP源码，MVCC,Spring 传播级别 等内容。<br>​     后来第二天就通知我说直接过了，不用二三面了，就这样只面了一面稀里糊涂的过了百度。（项目考虑周到+基础知识回答的好）</p>
+<p> 小米：<br>​     我作为一个米粉，能去小米是挺幸福的事的，最后也选择了去实习。一面比较简单（IOC原理，数组链表区别，二叉树遍历，设计模式，SpringMVC请求流程），二面问了事务的实现原理（redo+undo），MVCC,引擎之间的区别，Linux管道的作用。差不多是这些，因为是米粉所以毫不犹豫的接收了小米OFFER，没去百度。</p>
+<p> 美团：<br>​     一面，问基础知识问的特别详细问了50分钟大概。基本上只有1-2个细节回答不上，总体来说还是靠基础知识通过了一面（hashmap原理 conccurentHashmap原理 SSM原理 MySQL索引 等内容）<br>​     过了20分钟大概二面，主要是些开放性的问题，以及为什么不继续留在小米，以后打算做哪方面的内容。</p>
+<p> 阿里：<br>​     一面，自我感觉问的超级难，搜索引擎 ES原理 编译原理 倒排索引 类加载机制 UnsatisfiedLinkedError ClassNotFoundException Synchronized原理 B+树 外加视频做了一道动态规划的算法题 （感觉发挥得不是很好）<br>​    二面 SSM原理+MySQL索引调优+项目细问<br>​    然后就是HR面了。</p>
+<p> 自我感觉面试就像打扑克一样，手里握着的牌就是自己积累的知识，有的知识点是爆炸性的如（SSM源码，MySQL事务原理，等一切原理性 源码性的东西），找机会把这些王牌扔出来，成功率会高不少。</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018/04/12/大三Java实习总结网易百度小米美团阿里/">Java实习总结网易百度小米美团阿里</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">杨凯文</a></p>
+        <p><span>发布时间:</span>2018-04-12, 23:59:53</p>
+        <p><span>最后更新:</span>2018-10-07, 10:45:40</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018/04/12/大三Java实习总结网易百度小米美团阿里/" title="Java实习总结网易百度小米美团阿里">http://yangkw.github.io/2018/04/12/大三Java实习总结网易百度小米美团阿里/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yangkw.github.io/2018/04/12/大三Java实习总结网易百度小米美团阿里/　　作者: 杨凯文" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2018/05/06/事务/">
+                    MySQL事务原理浅析
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2017/11/11/利用反射及循环构造Bean的一次实践/">
+                    利用反射及循环构造Bean的一次实践
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"Java实习总结网易百度小米美团阿里　| Kevin's Blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2018/05/06/事务/" title="上一篇: MySQL事务原理浅析">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2017/11/11/利用反射及循环构造Bean的一次实践/" title="下一篇: 利用反射及循环构造Bean的一次实践">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/08/24/IO/">通过IO模型带来的思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/01/Spring-IOC源码跟踪记录/">Spring IOC源码跟踪记录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/22/几行代码实现RPC框架/">几行代码实现RPC框架</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/06/事务/">MySQL事务原理浅析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/12/大三Java实习总结网易百度小米美团阿里/">Java实习总结网易百度小米美团阿里</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/11/11/利用反射及循环构造Bean的一次实践/">利用反射及循环构造Bean的一次实践</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/11/01/读书笔记之JVM垃圾回收/">读书笔记整理之JVM垃圾回收</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/10/18/网易考拉海购Java后台开发实习-面经（已拿offer）/">网易考拉海购Java后台开发实习-面经（已拿offer）</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/10/12/Java并发编程-volatile可见性的介绍/">Java并发编程-volatile可见性的介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/09/15/浅析MySQL中的explain参数/">浅析MySQL语句优化中的explain参数</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/29/看得懂的常见排序算法分析(java实现)/">常见排序算法分析Java实现(内附大量注释)</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/04/条件队列的唤醒机制探究/">条件队列的唤醒机制探究</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/07/28/并发编程笔记/">并发编程笔记</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2017-2018 杨凯文
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 2;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+            
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

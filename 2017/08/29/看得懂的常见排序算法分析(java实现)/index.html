@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="杨凯文" />
+
+
+
+<meta name="description" content="前言排序算法属于数据结构的内容,不算太难但是要完全掌握还是得一步一步的分析代码体会不同排序算法的思想,并且试着自己实现,在面试中经常会要求手写xx排序算法,如何让一串不规则的数字用最快的时间,最少的空间将这串数字有序,想想也是一件挺有趣的事。各种排序方法性能的比较">
+<meta name="keywords" content="Java,算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="常见排序算法分析Java实现(内附大量注释)">
+<meta property="og:url" content="http://yangkw.github.io/2017/08/29/看得懂的常见排序算法分析(java实现)/index.html">
+<meta property="og:site_name" content="Kevin&#39;s Blog">
+<meta property="og:description" content="前言排序算法属于数据结构的内容,不算太难但是要完全掌握还是得一步一步的分析代码体会不同排序算法的思想,并且试着自己实现,在面试中经常会要求手写xx排序算法,如何让一串不规则的数字用最快的时间,最少的空间将这串数字有序,想想也是一件挺有趣的事。各种排序方法性能的比较">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-10-05T15:11:13.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="常见排序算法分析Java实现(内附大量注释)">
+<meta name="twitter:description" content="前言排序算法属于数据结构的内容,不算太难但是要完全掌握还是得一步一步的分析代码体会不同排序算法的思想,并且试着自己实现,在面试中经常会要求手写xx排序算法,如何让一串不规则的数字用最快的时间,最少的空间将这串数字有序,想想也是一件挺有趣的事。各种排序方法性能的比较">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Kevin&#39;s Blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>常见排序算法分析Java实现(内附大量注释) | Kevin&#39;s Blog</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?8cec84d631c2e9b50fa5c523c42c9d8b";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">杨凯文</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">因为相信, 所以看见</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:kw89@qq.com" title="Email"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 知乎" href="https://www.zhihu.com/people/yangkw/activities" title="知乎"></a>
+                            
+                                <a class="fa SegmentFault" href="https://segmentfault.com/u/yangkw" title="SegmentFault"></a>
+                            
+                                <a class="fa Coding" href="https://github.com/yangkw" title="Coding"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">与世界分享收获与见解</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">杨凯文</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">杨凯文</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">因为相信, 所以看见</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:kw89@qq.com" title="Email"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 知乎" target="_blank" href="https://www.zhihu.com/people/yangkw/activities" title="知乎"></a>
+                            
+                                <a class="fa SegmentFault" target="_blank" href="https://segmentfault.com/u/yangkw" title="SegmentFault"></a>
+                            
+                                <a class="fa Coding" target="_blank" href="https://github.com/yangkw" title="Coding"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-看得懂的常见排序算法分析(java实现)" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2017/08/29/看得懂的常见排序算法分析(java实现)/" class="article-date">
+      <time datetime="2017-08-29T15:38:53.000Z" itemprop="datePublished">2017-08-29</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      常见排序算法分析Java实现(内附大量注释)
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/算法/">算法</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>排序算法属于数据结构的内容,不算太难但是要完全掌握还是得一步一步的分析代码体会不同排序算法的思想,并且试着自己实现,在面试中经常会要求手写xx排序算法,如何让一串不规则的数字用最快的时间,最少的空间将这串数字有序,想想也是一件挺有趣的事。<br>各种排序方法性能的比较<br><a id="more"></a></p>
+<hr>
+<table>
+<thead>
+<tr>
+<th>排序方法</th>
+<th style="text-align:left">最好时间</th>
+<th style="text-align:left">最坏时间</th>
+<th style="text-align:left">时间复杂度</th>
+<th style="text-align:left">空间复杂度</th>
+<th style="text-align:left">稳定性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>直接插入排序</td>
+<td style="text-align:left">O(n)</td>
+<td style="text-align:left">O(n<sup>2</sup>)</td>
+<td style="text-align:left">O(n<sup>2</sup>)</td>
+<td style="text-align:left">O(1)</td>
+<td style="text-align:left">稳定</td>
+</tr>
+<tr>
+<td>希尔排序</td>
+<td style="text-align:left">O(nlog<sub>2</sub><sup>n</sup>)</td>
+<td style="text-align:left">O(n<sup>3/2</sup>)</td>
+<td style="text-align:left">O(nlog<sub>2</sub><sup>n</sup>))</td>
+<td style="text-align:left">O(1)</td>
+<td style="text-align:left">不稳定</td>
+</tr>
+<tr>
+<td>冒泡排序</td>
+<td style="text-align:left">O(n)</td>
+<td style="text-align:left">O(n<sup>2</sup>)</td>
+<td style="text-align:left">O(n<sup>2</sup>)</td>
+<td style="text-align:left">O(1)</td>
+<td style="text-align:left">稳定</td>
+</tr>
+<tr>
+<td>快速排序</td>
+<td style="text-align:left">O(nlog<sub>2</sub><sup>n</sup>)</td>
+<td style="text-align:left">O(n<sup>2</sup>)</td>
+<td style="text-align:left">O(nlog<sub>2</sub><sup>n</sup>)</td>
+<td style="text-align:left">O(log<sub>2</sub><sup>n</sup>)</td>
+<td style="text-align:left">不稳定</td>
+</tr>
+<tr>
+<td>简单选择排序</td>
+<td style="text-align:left">O(n)</td>
+<td style="text-align:left">O(n<sup>2</sup>)</td>
+<td style="text-align:left">O(n<sup>2</sup>)</td>
+<td style="text-align:left">O(1)</td>
+<td style="text-align:left">不稳定</td>
+</tr>
+<tr>
+<td>堆排序</td>
+<td style="text-align:left">O(nlog<sub>2</sub><sup>n</sup>)</td>
+<td style="text-align:left">O(nlog<sub>2</sub><sup>n</sup>)</td>
+<td style="text-align:left">O(nlog<sub>2</sub><sup>n</sup>)</td>
+<td style="text-align:left">O(1)</td>
+<td style="text-align:left">不稳定</td>
+</tr>
+<tr>
+<td>二路归并排序</td>
+<td style="text-align:left">O(nlog<sub>2</sub><sup>n</sup>)</td>
+<td style="text-align:left">O(nlog<sub>2</sub><sup>n</sup>)</td>
+<td style="text-align:left">O(nlog<sub>2</sub><sup>n</sup>)</td>
+<td style="text-align:left">O(n)</td>
+<td style="text-align:left">稳定</td>
+</tr>
+</tbody>
+</table>
+<h2 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h2><p>为了直观，算法的思想及其步骤都写在了代码注释里</p>
+<p><strong>直接插入排序</strong></p>
+<p>先看代码</p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">justAddSort</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">      <span class="keyword">int</span>[] a = &#123;<span class="number">49</span>, <span class="number">38</span>, <span class="number">65</span>, <span class="number">97</span>, <span class="number">76</span>, <span class="number">13</span>, <span class="number">27</span>, <span class="number">49</span>, <span class="number">78</span>, <span class="number">34</span>, <span class="number">12</span>, <span class="number">64</span>, <span class="number">1</span>&#125;;</span><br><span class="line">      System.<span class="keyword">out</span>.println(<span class="string">"排序之前："</span>);</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">          System.<span class="keyword">out</span>.print(a[i] + <span class="string">" "</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">//-------------好戏开始--------------------</span></span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; a.length; i++) &#123; <span class="comment">//从第二个元素开始向后遍历</span></span><br><span class="line">          <span class="keyword">int</span> temp = a[i];  <span class="comment">//用一个int变量保存待插入元素a[i]的值，所以空间复杂度为O(1)</span></span><br><span class="line">          <span class="keyword">int</span> j;      <span class="comment">//j代表待插元素temp的最终归宿;</span></span><br><span class="line">          <span class="keyword">for</span> (j = i - <span class="number">1</span>; j &gt;= <span class="number">0</span>; j--) &#123; <span class="comment">//用一个for循环遍历i左边的元素，究竟temp放在哪里</span></span><br><span class="line">              <span class="comment">//将大于temp的往后移动一位</span></span><br><span class="line">              System.<span class="keyword">out</span>.println(j);</span><br><span class="line">              <span class="keyword">if</span> (a[j] &gt; temp) &#123; <span class="comment">//只有a[j]比temp值大才有继续for循环的资本</span></span><br><span class="line">                  a[j + <span class="number">1</span>] = a[j]; <span class="comment">//因为a[i]的值赋给了temp,可以放心地右移元素</span></span><br><span class="line">              &#125; <span class="keyword">else</span> &#123; <span class="comment">//直接跳出for循环;</span></span><br><span class="line">                  <span class="keyword">break</span>;</span><br><span class="line">              &#125;</span><br><span class="line">          &#125;</span><br><span class="line">          a[j + <span class="number">1</span>] = temp; <span class="comment">//因为在跳出for循环的时候执行了一次j--,所以这里是a[j+1],代表temp最终归宿</span></span><br><span class="line">      &#125;</span><br><span class="line">      System.<span class="keyword">out</span>.println(<span class="string">"排序之后："</span>);</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">          System.<span class="keyword">out</span>.print(a[i] + <span class="string">" "</span>);</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>直接插入排序如同玩扑克牌的人抓牌一样，将抓到的牌插入手中已排好的牌中一个适当的位置,下面介绍另一种插入排序。</p>
+<p> <strong>二分法插入排序</strong></p>
+<figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">void binarySort() &#123;</span><br><span class="line">    <span class="built_in">int</span>[] a = &#123;<span class="number">49</span>, <span class="number">38</span>, <span class="number">65</span>, <span class="number">97</span>, <span class="number">76</span>, <span class="number">13</span>, <span class="number">27</span>, <span class="number">49</span>, <span class="number">78</span>, <span class="number">34</span>, <span class="number">12</span>, <span class="number">64</span>, <span class="number">1</span>&#125;;</span><br><span class="line">    System.out.println(<span class="string">"排序之前："</span>);</span><br><span class="line">    for (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">        System.out.print(a[i] + <span class="string">" "</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    for (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123; //因为是从第<span class="number">0</span>个开始插入,所以在插入第<span class="built_in">n</span>个元素的时候,前面(<span class="built_in">n</span>-<span class="number">1</span>)个元素已经有序</span><br><span class="line">        <span class="built_in">int</span> temp = a[i]; //获取待插值</span><br><span class="line">        <span class="built_in">int</span> <span class="built_in">left</span> = <span class="number">0</span>;    //<span class="number">1</span>.用于查找temp的最终归宿，<span class="number">2</span>.作为（<span class="built_in">n</span>-<span class="number">1</span>）个有序元素的头</span><br><span class="line">        <span class="built_in">int</span> <span class="built_in">right</span> = i - <span class="number">1</span>; //作为有序元素的末端</span><br><span class="line">        <span class="built_in">int</span> <span class="built_in">mid</span> = <span class="number">0</span>; //二分查找的精髓</span><br><span class="line">        while (<span class="built_in">left</span> &lt;= <span class="built_in">right</span>) &#123;   //只要<span class="built_in">left</span>&lt;=<span class="built_in">right</span> 就说明还没有找出适合的插入点</span><br><span class="line">            <span class="built_in">mid</span> = (<span class="built_in">left</span> + <span class="built_in">right</span>) / <span class="number">2</span>;</span><br><span class="line">            <span class="built_in">if</span> (temp &lt; a[<span class="built_in">mid</span>]) &#123;   //待插值&lt;a[<span class="built_in">mid</span>] 则在<span class="built_in">mid</span>左边的数组找</span><br><span class="line">                <span class="built_in">right</span> = <span class="built_in">mid</span> - <span class="number">1</span>;</span><br><span class="line">            &#125; else &#123;                //否则在<span class="built_in">mid</span>右边的数组找</span><br><span class="line">                <span class="built_in">left</span> = <span class="built_in">mid</span> + <span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        for (<span class="built_in">int</span> j = i - <span class="number">1</span>; j &gt;= <span class="built_in">left</span>; j--) &#123; //将<span class="built_in">left</span>右边的值都右移<span class="number">1</span>位</span><br><span class="line">            a[j + <span class="number">1</span>] = a[j];</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">if</span> (<span class="built_in">left</span> != i) &#123; //<span class="built_in">left</span>=i说明 temp是有序(<span class="built_in">n</span>-<span class="number">1</span>)个有序数组里的最大值可忽略，!=i则可以插入</span><br><span class="line">            a[<span class="built_in">left</span>] = temp;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    System.out.println(<span class="string">"排序之后："</span>);</span><br><span class="line">    for (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">        System.out.print(a[i] + <span class="string">" "</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>二分法插入排序也是稳定的。</p>
+<p>二分插入排序的比较次数与待排序记录的初始状态无关，仅依赖于记录的个数。当n较大时，比直接插入排序的最大比较次数少得多。但大于直接插入排序的最小比较次数。算法的移动次数与直接插入排序算法的相同，平均移动次数为O(n<sup>2</sup>)。</p>
+<p> <strong>希尔排序</strong></p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">shellSort</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span>[] a=&#123;<span class="number">49</span>,<span class="number">38</span>,<span class="number">65</span>,<span class="number">97</span>,<span class="number">76</span>,<span class="number">13</span>,<span class="number">27</span>,<span class="number">49</span>,<span class="number">78</span>,<span class="number">34</span>,<span class="number">12</span>,<span class="number">64</span>,<span class="number">1</span>&#125;;</span><br><span class="line">        System.<span class="keyword">out</span>.println(<span class="string">"排序之前："</span>);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">            System.<span class="keyword">out</span>.print(a[i]+<span class="string">" "</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//希尔排序</span></span><br><span class="line">        <span class="keyword">int</span> d = a.length; <span class="comment">//d代表方阵的长度大小,只和方阵以外的且相同顺序的元素对比交换(如第一方阵的1号元素只和第二方阵的1号元素对比)</span></span><br><span class="line">        <span class="keyword">while</span>(<span class="literal">true</span>)&#123; <span class="comment">//负责切换d的大小</span></span><br><span class="line">            d = d / <span class="number">2</span>;</span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> x=<span class="number">0</span>;x&lt;d;x++)&#123;<span class="comment">// 遍历d内的元素</span></span><br><span class="line">                <span class="keyword">for</span>(<span class="keyword">int</span> i=x+d;i&lt;a.length;i=i+d)&#123; <span class="comment">//联系d之外的元素</span></span><br><span class="line">                    <span class="keyword">int</span> temp = a[i];</span><br><span class="line">                    <span class="keyword">int</span> j;</span><br><span class="line">                    <span class="keyword">for</span>(j=i-d;j&gt;=<span class="number">0</span>&amp;&amp;a[j]&gt;temp;j=j-d)&#123;   <span class="comment">//对比其他方阵内同位置元素的大小</span></span><br><span class="line">                        a[j+d] = a[j];    <span class="comment">//将大值跨方阵移一位</span></span><br><span class="line">                    &#125;</span><br><span class="line">                    a[j+d] = temp;  <span class="comment">//将保存的temp值放在最后一次移动过的下标,因为脱离for循环的时候执行过j=j-d,所以这里是a[j+d]</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span>(d == <span class="number">1</span>)&#123;   <span class="comment">//当d=1,执行完上述逻辑，并结束此次排序，因为d不可再分</span></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        System.<span class="keyword">out</span>.println();</span><br><span class="line">        System.<span class="keyword">out</span>.println(<span class="string">"排序之后："</span>);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">            System.<span class="keyword">out</span>.print(a[i]+<span class="string">" "</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>希尔排序先将整个待排序记录序列分割成为若干子序列,分别进行直接插入排序,待整个记录基本有序时,再对全体记录进行直接插入排序,减少移动次数,提高了效率！</p>
+<p> <strong>简单选择排序</strong></p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">simpleChoose</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">       <span class="keyword">int</span>[] a=&#123;<span class="number">49</span>,<span class="number">38</span>,<span class="number">65</span>,<span class="number">97</span>,<span class="number">76</span>,<span class="number">13</span>,<span class="number">27</span>,<span class="number">49</span>,<span class="number">78</span>,<span class="number">34</span>,<span class="number">12</span>,<span class="number">64</span>,<span class="number">1</span>,<span class="number">8</span>&#125;;</span><br><span class="line">       System.<span class="keyword">out</span>.println(<span class="string">"排序之前："</span>);</span><br><span class="line">       <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">           System.<span class="keyword">out</span>.print(a[i]+<span class="string">" "</span>);</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">           <span class="keyword">int</span> temp=a[i];           <span class="comment">//temp用来保存遍历过的元素中的最小值</span></span><br><span class="line">           <span class="keyword">int</span> num=i;              <span class="comment">//num用来保存遍历过的元素中的最小值的index</span></span><br><span class="line">           <span class="keyword">for</span> (<span class="keyword">int</span> j=i+<span class="number">1</span>;j&lt;a.length;j++)&#123; <span class="comment">// 此处for循环好比一个比赛，找出最小值</span></span><br><span class="line">               <span class="keyword">if</span> (a[j]&lt;temp)&#123;</span><br><span class="line">                   temp=a[j];          <span class="comment">//temp保存暂时的最小值</span></span><br><span class="line">                   num=j;              <span class="comment">//num保存暂时的最小值index</span></span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">           a[num]=a[i];        <span class="comment">//将a[i]与右边的最小值互换</span></span><br><span class="line">           a[i]=temp;</span><br><span class="line"></span><br><span class="line">       &#125;</span><br><span class="line">       System.<span class="keyword">out</span>.println(<span class="string">"排序之后："</span>);</span><br><span class="line">       <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">           System.<span class="keyword">out</span>.print(a[i]+<span class="string">" "</span>);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>简单选择排序可以理解成为每次循环遍历找出最小值的过程</p>
+<p> <strong>堆排序</strong></p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">heapSort</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line"></span><br><span class="line">           <span class="keyword">int</span>[] a=&#123;<span class="number">49</span>,<span class="number">38</span>,<span class="number">65</span>,<span class="number">97</span>,<span class="number">76</span>,<span class="number">13</span>,<span class="number">27</span>,<span class="number">49</span>,<span class="number">78</span>,<span class="number">34</span>,<span class="number">12</span>,<span class="number">98</span>,<span class="number">1</span>&#125;;</span><br><span class="line">           <span class="keyword">int</span> arrayLength=a.length;</span><br><span class="line">           <span class="comment">//循环建堆</span></span><br><span class="line">           <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;arrayLength<span class="number">-1</span>;i++)&#123;</span><br><span class="line">               <span class="comment">//建堆</span></span><br><span class="line">               buildMaxHeap(a,arrayLength<span class="number">-1</span>-i);</span><br><span class="line">               <span class="comment">//交换堆顶和最后一个元素</span></span><br><span class="line">               swap(a,<span class="number">0</span>,arrayLength<span class="number">-1</span>-i);</span><br><span class="line"></span><br><span class="line">               System.<span class="keyword">out</span>.println(Arrays.toString(a));</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="comment">//对data数组从0到lastIndex建大顶堆</span></span><br><span class="line">       <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">buildMaxHeap</span>(<span class="params"><span class="keyword">int</span>[] data, <span class="keyword">int</span> lastIndex</span>)</span>&#123;</span><br><span class="line">           <span class="comment">//从lastIndex处节点（最后一个节点）的父节点开始</span></span><br><span class="line">           <span class="keyword">for</span>(<span class="keyword">int</span> i=(lastIndex<span class="number">-1</span>)/<span class="number">2</span>;i&gt;=<span class="number">0</span>;i--)&#123;</span><br><span class="line">               <span class="comment">//k保存正在判断的节点</span></span><br><span class="line">               <span class="keyword">int</span> k=i;</span><br><span class="line">               <span class="comment">//如果当前k节点的子节点存在</span></span><br><span class="line">               <span class="keyword">while</span>(k*<span class="number">2</span>+<span class="number">1</span>&lt;=lastIndex)&#123;</span><br><span class="line">                   <span class="comment">//k节点的左子节点的索引</span></span><br><span class="line">                   <span class="keyword">int</span> biggerIndex=<span class="number">2</span>*k+<span class="number">1</span>;</span><br><span class="line">                   <span class="comment">//如果biggerIndex小于lastIndex，即biggerIndex+1代表的k节点的右子节点存在</span></span><br><span class="line">                   <span class="keyword">if</span>(biggerIndex&lt;lastIndex)&#123;</span><br><span class="line">                       <span class="comment">//若果右子节点的值较大</span></span><br><span class="line">                       <span class="keyword">if</span>(data[biggerIndex]&lt;data[biggerIndex+<span class="number">1</span>])&#123;</span><br><span class="line">                           <span class="comment">//biggerIndex总是记录较大子节点的索引</span></span><br><span class="line">                           biggerIndex++;</span><br><span class="line">                       &#125;</span><br><span class="line">                   &#125;</span><br><span class="line">                   <span class="comment">//如果k节点的值小于其较大的子节点的值</span></span><br><span class="line">                   <span class="keyword">if</span>(data[k]&lt;data[biggerIndex])&#123;</span><br><span class="line">                       <span class="comment">//交换他们</span></span><br><span class="line">                       swap(data,k,biggerIndex);</span><br><span class="line">                       <span class="comment">//将biggerIndex赋予k，开始while循环的下一次循环，重新保证k节点的值大于其左右子节点的值</span></span><br><span class="line">                       k=biggerIndex;</span><br><span class="line">                   &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">                       <span class="keyword">break</span>;</span><br><span class="line">                   &#125;</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="comment">//交换</span></span><br><span class="line">       <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">swap</span>(<span class="params"><span class="keyword">int</span>[] data, <span class="keyword">int</span> i, <span class="keyword">int</span> j</span>)</span> &#123;</span><br><span class="line">           <span class="keyword">int</span> tmp=data[i];</span><br><span class="line">           data[i]=data[j];</span><br><span class="line">           data[j]=tmp;</span><br><span class="line">       &#125;</span><br></pre></td></tr></table></figure>
+<p>堆排序在数据量非常大的时候非常有用,其大体思想和简单选择排序相似，堆排序是找出最大值，从右边开始建立有序数组。简单选择排序是找出最小值，从左边开始建立有序数组。</p>
+<p> <strong>冒泡排序</strong></p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">void bubbleSort()&#123;</span><br><span class="line">    int[] a=&#123;<span class="number">2222</span>,<span class="number">49</span>,<span class="number">38</span>,<span class="number">65</span>,<span class="number">97</span>,<span class="number">76</span>,<span class="number">13</span>,<span class="number">27</span>,<span class="number">49</span>,<span class="number">78</span>,<span class="number">34</span>,<span class="number">12</span>,<span class="number">64</span>,<span class="number">1</span>,<span class="number">8</span>&#125;;</span><br><span class="line">             System.out.println(<span class="string">"排序之前："</span>);</span><br><span class="line">           for (int i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">                     System.out.print(a[i]+<span class="string">" "</span>);</span><br><span class="line">                 &#125;</span><br><span class="line">            for (int i=<span class="number">0</span>;i&lt;a.length;i++)&#123; <span class="comment">//这个for循环控制第二个for循环遍历的元素个数</span></span><br><span class="line">               for (int j=<span class="number">0</span>;j&lt;a.length<span class="number">-1</span>-i;j++)&#123; <span class="comment">//第一次循环会将所有元素最大的移到最右边 第二次循环会将所有元素第二大的移到右2的位置</span></span><br><span class="line">                   if (a[j]&gt;a[j+<span class="number">1</span>])&#123;       <span class="comment">//很显然,如果左边比右边大则交换</span></span><br><span class="line">                       int temp=a[j+<span class="number">1</span>];</span><br><span class="line">                       a[j+<span class="number">1</span>]=a[j];</span><br><span class="line">                       a[j]=temp;</span><br><span class="line">                   &#125;</span><br><span class="line">               &#125;</span><br><span class="line">                System.out.println(Arrays.toString(a));</span><br><span class="line">            &#125;</span><br><span class="line">    System.out.println(<span class="string">"排序之后："</span>);</span><br><span class="line">    for (int i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">        System.out.print(a[i]+<span class="string">" "</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>冒泡排序将相邻记录的关键字进行比较，若前面记录的value大于后面记录的value，则交换。较小的记录像水泡向前冒出，较大的记录像石块沉入后部。</p>
+<p> <strong>快速排序</strong></p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">quickSort</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">    <span class="keyword">int</span>[] a=&#123;<span class="number">49</span>,<span class="number">38</span>,<span class="number">65</span>,<span class="number">97</span>,<span class="number">76</span>,<span class="number">13</span>,<span class="number">27</span>,<span class="number">49</span>,<span class="number">78</span>,<span class="number">34</span>,<span class="number">12</span>,<span class="number">64</span>,<span class="number">1</span>,<span class="number">8</span>&#125;;</span><br><span class="line">    System.<span class="keyword">out</span>.println(<span class="string">"排序之前："</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">        System.<span class="keyword">out</span>.print(a[i]+<span class="string">" "</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//快速排序</span></span><br><span class="line">    quick(a);</span><br><span class="line">    System.<span class="keyword">out</span>.println(<span class="string">"排序之后："</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">        System.<span class="keyword">out</span>.print(a[i]+<span class="string">" "</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">quick</span>(<span class="params"><span class="keyword">int</span>[] a</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(a.length&gt;<span class="number">0</span>)&#123;</span><br><span class="line">        quickSort(a,<span class="number">0</span>,a.length<span class="number">-1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">quickSort</span>(<span class="params"><span class="keyword">int</span>[] a, <span class="keyword">int</span> low, <span class="keyword">int</span> high</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(low&lt;high)&#123; <span class="comment">//如果不加这个判断递归会无法退出导致堆栈溢出异常</span></span><br><span class="line">        <span class="keyword">int</span> middle = getMiddle(a,low,high); <span class="comment">//middle已经找到了数组中属于自己的位置 (middle左边都比middle小，middle右边都比middle大)</span></span><br><span class="line">        quickSort(a, <span class="number">0</span>, middle<span class="number">-1</span>);<span class="comment">// 所以middle不再参与排序运算</span></span><br><span class="line">        quickSort(a, middle+<span class="number">1</span>, high);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">getMiddle</span>(<span class="params"><span class="keyword">int</span>[] a, <span class="keyword">int</span> low, <span class="keyword">int</span> high</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">int</span> temp = a[low];<span class="comment">//基准元素</span></span><br><span class="line">    <span class="keyword">while</span>(low&lt;high)&#123; <span class="comment">//除非temp = a[high] 否则只执行以下两个while循环中的一个</span></span><br><span class="line">        <span class="comment">//找到比基准元素小的元素位置</span></span><br><span class="line">        <span class="keyword">while</span>(low&lt;high &amp;&amp; a[high]&gt;=temp)&#123; <span class="comment">//这两个while循环目的就是 找到数组中属于temp的那个位置，其左都比temp小，其右都比temp大</span></span><br><span class="line">            high--;</span><br><span class="line">        &#125;</span><br><span class="line">        a[low] = a[high];</span><br><span class="line">        <span class="keyword">while</span>(low&lt;high &amp;&amp; a[low]&lt;=temp)&#123;</span><br><span class="line">            low++;</span><br><span class="line">        &#125;</span><br><span class="line">        a[high] = a[low];</span><br><span class="line">    &#125;</span><br><span class="line">    a[low] = temp;<span class="comment">//或者a[high+1]=temp</span></span><br><span class="line">    <span class="keyword">return</span> low;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>快排的思想就是为各个元素在数组上找到属于自己的座位。</p>
+<p> <strong>归并排序</strong></p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">gbSort</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">    <span class="keyword">int</span>[] a=&#123;<span class="number">49</span>,<span class="number">38</span>,<span class="number">65</span>,<span class="number">97</span>,<span class="number">76</span>,<span class="number">13</span>,<span class="number">27</span>,<span class="number">49</span>,<span class="number">78</span>,<span class="number">34</span>,<span class="number">12</span>,<span class="number">64</span>,<span class="number">1</span>,<span class="number">8</span>&#125;;</span><br><span class="line">    System.<span class="keyword">out</span>.println(<span class="string">"排序之前："</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">        System.<span class="keyword">out</span>.print(a[i]+<span class="string">" "</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//归并排序</span></span><br><span class="line">    mergeSort(a,<span class="number">0</span>,a.length<span class="number">-1</span>);</span><br><span class="line">    System.<span class="keyword">out</span>.println(<span class="string">"排序之后："</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; a.length; i++) &#123;</span><br><span class="line">        System.<span class="keyword">out</span>.print(a[i]+<span class="string">" "</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">mergeSort</span>(<span class="params"><span class="keyword">int</span>[] a, <span class="keyword">int</span> left, <span class="keyword">int</span> right</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(left&lt;right)&#123;</span><br><span class="line">        <span class="keyword">int</span> middle = (left+right)/<span class="number">2</span>;</span><br><span class="line">        <span class="comment">//对左边进行递归</span></span><br><span class="line">        mergeSort(a, left, middle);</span><br><span class="line">        <span class="comment">//对右边进行递归</span></span><br><span class="line">        mergeSort(a, middle+<span class="number">1</span>, right);</span><br><span class="line">        <span class="comment">//合并</span></span><br><span class="line">        merge(a,left,middle,right);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">merge</span>(<span class="params"><span class="keyword">int</span>[] a, <span class="keyword">int</span> left, <span class="keyword">int</span> middle, <span class="keyword">int</span> right</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">int</span>[] tmpArr = <span class="keyword">new</span> <span class="keyword">int</span>[a.length];   <span class="comment">//归并排序借助一个中间数组</span></span><br><span class="line">    <span class="keyword">int</span> mid = middle+<span class="number">1</span>; <span class="comment">//右边的起始位置</span></span><br><span class="line">    <span class="keyword">int</span> tmp = left;     <span class="comment">//保存起始位置</span></span><br><span class="line">    <span class="keyword">int</span> third = left;   <span class="comment">//中间数组的起始位置</span></span><br><span class="line">    <span class="keyword">while</span>(left&lt;=middle &amp;&amp; mid&lt;=right)&#123;</span><br><span class="line">        <span class="comment">//从两个数组中选取较小的数放入中间数组</span></span><br><span class="line">        <span class="keyword">if</span>(a[left]&lt;=a[mid])&#123;</span><br><span class="line">            tmpArr[third++] = a[left++];</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">            tmpArr[third++] = a[mid++];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//将剩余的部分放入中间数组</span></span><br><span class="line">    <span class="keyword">while</span>(left&lt;=middle)&#123;</span><br><span class="line">        tmpArr[third++] = a[left++];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span>(mid&lt;=right)&#123;</span><br><span class="line">        tmpArr[third++] = a[mid++];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//将中间数组复制回原数组</span></span><br><span class="line">    <span class="keyword">while</span>(tmp&lt;=right)&#123;</span><br><span class="line">        a[tmp] = tmpArr[tmp++];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>归并排序算法的思路是:对任意长度n的序列，先看成n个长度为1的有序序列，然后归并为n/2个有序表，在对n/2个有序表两两归并，直到得到一个长为n的有序表。</p>
+<h2 id="视频演示"><a href="#视频演示" class="headerlink" title="视频演示"></a>视频演示</h2><p>最后介绍一个特别棒的排序算法视频给大家<br><a href="http://www.vaikan.com/sort-dance/" target="_blank" rel="noopener">舞蹈展示排序算法</a></p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2017/08/29/看得懂的常见排序算法分析(java实现)/">常见排序算法分析Java实现(内附大量注释)</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">杨凯文</a></p>
+        <p><span>发布时间:</span>2017-08-29, 23:38:53</p>
+        <p><span>最后更新:</span>2018-10-05, 23:11:13</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2017/08/29/看得懂的常见排序算法分析(java实现)/" title="常见排序算法分析Java实现(内附大量注释)">http://yangkw.github.io/2017/08/29/看得懂的常见排序算法分析(java实现)/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yangkw.github.io/2017/08/29/看得懂的常见排序算法分析(java实现)/　　作者: 杨凯文" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2017/09/15/浅析MySQL中的explain参数/">
+                    浅析MySQL语句优化中的explain参数
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2017/08/04/条件队列的唤醒机制探究/">
+                    条件队列的唤醒机制探究
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#具体实现"><span class="toc-number">2.</span> <span class="toc-text">具体实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#视频演示"><span class="toc-number">3.</span> <span class="toc-text">视频演示</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"常见排序算法分析Java实现(内附大量注释)　| Kevin's Blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2017/09/15/浅析MySQL中的explain参数/" title="上一篇: 浅析MySQL语句优化中的explain参数">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2017/08/04/条件队列的唤醒机制探究/" title="下一篇: 条件队列的唤醒机制探究">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/08/24/IO/">通过IO模型带来的思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/01/Spring-IOC源码跟踪记录/">Spring IOC源码跟踪记录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/22/几行代码实现RPC框架/">几行代码实现RPC框架</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/06/事务/">MySQL事务原理浅析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/12/大三Java实习总结网易百度小米美团阿里/">Java实习总结网易百度小米美团阿里</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/11/11/利用反射及循环构造Bean的一次实践/">利用反射及循环构造Bean的一次实践</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/11/01/读书笔记之JVM垃圾回收/">读书笔记整理之JVM垃圾回收</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/10/18/网易考拉海购Java后台开发实习-面经（已拿offer）/">网易考拉海购Java后台开发实习-面经（已拿offer）</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/10/12/Java并发编程-volatile可见性的介绍/">Java并发编程-volatile可见性的介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/09/15/浅析MySQL中的explain参数/">浅析MySQL语句优化中的explain参数</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/29/看得懂的常见排序算法分析(java实现)/">常见排序算法分析Java实现(内附大量注释)</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/04/条件队列的唤醒机制探究/">条件队列的唤醒机制探究</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/07/28/并发编程笔记/">并发编程笔记</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2017-2018 杨凯文
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 2;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+            
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

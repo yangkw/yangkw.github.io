@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="杨凯文" />
+
+
+
+<meta name="description" content="IO模型对于IO，我们经常可以听到诸如同步阻塞IO，同步非阻塞IO，异步IO等等，那么什么是异步/同步，什么是阻塞/非阻塞？首先一次IO在UNIX系统中分为两个步骤">
+<meta name="keywords" content="Java,IO">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通过IO模型带来的思考">
+<meta property="og:url" content="http://yangkw.github.io/2018/08/24/IO/index.html">
+<meta property="og:site_name" content="Kevin&#39;s Blog">
+<meta property="og:description" content="IO模型对于IO，我们经常可以听到诸如同步阻塞IO，同步非阻塞IO，异步IO等等，那么什么是异步/同步，什么是阻塞/非阻塞？首先一次IO在UNIX系统中分为两个步骤">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-10-06T16:22:25.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="通过IO模型带来的思考">
+<meta name="twitter:description" content="IO模型对于IO，我们经常可以听到诸如同步阻塞IO，同步非阻塞IO，异步IO等等，那么什么是异步/同步，什么是阻塞/非阻塞？首先一次IO在UNIX系统中分为两个步骤">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Kevin&#39;s Blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>通过IO模型带来的思考 | Kevin&#39;s Blog</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?8cec84d631c2e9b50fa5c523c42c9d8b";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">杨凯文</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">因为相信, 所以看见</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:kw89@qq.com" title="Email"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 知乎" href="https://www.zhihu.com/people/yangkw/activities" title="知乎"></a>
+                            
+                                <a class="fa SegmentFault" href="https://segmentfault.com/u/yangkw" title="SegmentFault"></a>
+                            
+                                <a class="fa Coding" href="https://github.com/yangkw" title="Coding"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">与世界分享收获与见解</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">杨凯文</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">杨凯文</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">因为相信, 所以看见</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:kw89@qq.com" title="Email"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 知乎" target="_blank" href="https://www.zhihu.com/people/yangkw/activities" title="知乎"></a>
+                            
+                                <a class="fa SegmentFault" target="_blank" href="https://segmentfault.com/u/yangkw" title="SegmentFault"></a>
+                            
+                                <a class="fa Coding" target="_blank" href="https://github.com/yangkw" title="Coding"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-IO" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/08/24/IO/" class="article-date">
+      <time datetime="2018-08-24T08:11:01.000Z" itemprop="datePublished">2018-08-24</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      通过IO模型带来的思考
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/IO/">IO</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h3 id="IO模型"><a href="#IO模型" class="headerlink" title="IO模型"></a>IO模型</h3><p>对于IO，我们经常可以听到诸如同步阻塞IO，同步非阻塞IO，异步IO等等，那么什么是异步/同步，什么是阻塞/非阻塞？首先一次IO在UNIX系统中分为两个步骤</p>
+<a id="more"></a>
+<p><strong>1.发起IO请求：</strong>用户线程向操作系统内核发起IO请求</p>
+<p><strong>2.执行IO操作：</strong>当内核准备好数据可以提交给发起IO请求的线程</p>
+<p>阻塞/非阻塞的区别：发起IO请求之后会一直等待直到获取数据则是阻塞，否则是非阻塞</p>
+<p>同步/异步的区别：获取到的数据是自己主动拿到的则是同步，是被动拿到的则是异步</p>
+<p>下面我用<strong>取快递</strong>这个例子来介绍一下UNIX的五种IO模型</p>
+<p>众所周知吸管喝饮料分为两个步骤：1.打开快递柜（发起IO请求），2.取走快递（执行IO操作）</p>
+<h4 id="同步-amp-阻塞IO"><a href="#同步-amp-阻塞IO" class="headerlink" title="同步&amp;阻塞IO"></a>同步&amp;阻塞IO</h4><p>打开快递柜（发起IO请求），如果快递柜里没有东西（内核没有准备好数据），则一直等在快递柜旁等快递来（阻塞直到内核准备好数据），快递柜有了快递则取走（用户线程读取内核中的数据）。</p>
+<p>整个流程除了拿快递，等快递不能做其他事</p>
+<h4 id="同步-amp-非阻塞IO"><a href="#同步-amp-非阻塞IO" class="headerlink" title="同步&amp;非阻塞IO"></a>同步&amp;非阻塞IO</h4><p>打开快递柜（发起IO请求），如果快递柜里没有东西（内核没有准备好数据），则马上做其他事情每隔一段时间就去快递柜里打开看看是否有快递（轮询内核是否准备好数据），快递柜有了快递则取走（用户线程读取内核中的数据）。</p>
+<p>尽管这个模型相对同步阻塞IO效率有一定提升，但是大量的无用轮询造成了CPU的空转，很少使用这种IO模型</p>
+<h4 id="同步-amp-多路复用IO"><a href="#同步-amp-多路复用IO" class="headerlink" title="同步&amp;多路复用IO"></a>同步&amp;多路复用IO</h4><p>需要同时取N个快递，派一个人帮你监视快递柜，告诉他你想要哪个快递比如告诉他我要天猫的快递，然后这个监视者一直站在快递柜旁边等待天猫快递到来并签收，我们只需要向这个监视者拿快递就行了。</p>
+<p>这个模型中，监视者就是我们Java NIO中的Selector，一个线程阻塞同时监管多个线程连接状态，返回给调用者连接状态满足所注册的状态条件连接线程。</p>
+<h4 id="同步-amp-信号驱动IO"><a href="#同步-amp-信号驱动IO" class="headerlink" title="同步&amp;信号驱动IO"></a>同步&amp;信号驱动IO</h4><p>在快递柜上写上自己的手机号（回调函数），当快递送过来的时候直接给我打电话（执行回调函数），然后我去取快递。</p>
+<h4 id="异步IO"><a href="#异步IO" class="headerlink" title="异步IO"></a>异步IO</h4><p>假设收快递的是一个国王，只需要叫一声 我想要收到我的快递，剩下的都不用国王自己操心了，会派人去快递柜门口等快递，然后会有人帮忙把快递送到手上（用户线程）</p>
+<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><p>其实同步异步/阻塞非阻塞并非只是在计算机的世界里有，在互联网时代，大部分的场景都在经历IO模型之间的转变</p>
+<p><strong>网购/外卖</strong>：就是一种异步IO，商品（数据）从卖家/餐厅（内核态）被送货员送到家（线程态），传统的从家里到餐厅然后吃饭，吃了回家，就是一种典型的同步阻塞IO。</p>
+<p><strong>滴滴打车</strong>：是一种信号驱动IO，在滴滴上下单过后就只需等待滴滴<strong>软件提示</strong>（回调函数）已经分配好司机并且正在来接你。传统的方式则是自己要在路口等出租车/公交车，同步阻塞IO。</p>
+<p><strong>微信/短信</strong>：非阻塞同步IO，要通知其他人直接把信息发出去就不用管了，一段时间去看看对方是否有回复（轮询）。而传统的打电话则要确保对方接听并将信息告知对方，同步阻塞IO。</p>
+<p><strong>种植业</strong>：多路复用IO，比如farmer每天去看果园哪些苹果红了（满足注册的条件）就将红苹果收下来。如果种植业机械化程度够高，则可以变成异步IO的模式，种植，浇水，收割全部由机器完成。</p>
+<p>等等</p>
+<p>社会上所有能够提升效率的场景，基本可以用IO模型去进行思考，演进过程也大致是从同步—》异步，阻塞—》非阻塞</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018/08/24/IO/">通过IO模型带来的思考</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">杨凯文</a></p>
+        <p><span>发布时间:</span>2018-08-24, 16:11:01</p>
+        <p><span>最后更新:</span>2018-10-07, 00:22:25</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018/08/24/IO/" title="通过IO模型带来的思考">http://yangkw.github.io/2018/08/24/IO/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yangkw.github.io/2018/08/24/IO/　　作者: 杨凯文" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018/08/01/Spring-IOC源码跟踪记录/">
+                    Spring IOC源码跟踪记录
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#IO模型"><span class="toc-number">1.</span> <span class="toc-text">IO模型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#同步-amp-阻塞IO"><span class="toc-number">1.1.</span> <span class="toc-text">同步&amp;阻塞IO</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#同步-amp-非阻塞IO"><span class="toc-number">1.2.</span> <span class="toc-text">同步&amp;非阻塞IO</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#同步-amp-多路复用IO"><span class="toc-number">1.3.</span> <span class="toc-text">同步&amp;多路复用IO</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#同步-amp-信号驱动IO"><span class="toc-number">1.4.</span> <span class="toc-text">同步&amp;信号驱动IO</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#异步IO"><span class="toc-number">1.5.</span> <span class="toc-text">异步IO</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#思考"><span class="toc-number">2.</span> <span class="toc-text">思考</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"通过IO模型带来的思考　| Kevin's Blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018/08/01/Spring-IOC源码跟踪记录/" title="下一篇: Spring IOC源码跟踪记录">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/08/24/IO/">通过IO模型带来的思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/01/Spring-IOC源码跟踪记录/">Spring IOC源码跟踪记录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/22/几行代码实现RPC框架/">几行代码实现RPC框架</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/06/事务/">MySQL事务原理浅析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/12/大三Java实习总结网易百度小米美团阿里/">Java实习总结网易百度小米美团阿里</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/11/11/利用反射及循环构造Bean的一次实践/">利用反射及循环构造Bean的一次实践</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/11/01/读书笔记之JVM垃圾回收/">读书笔记整理之JVM垃圾回收</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/10/18/网易考拉海购Java后台开发实习-面经（已拿offer）/">网易考拉海购Java后台开发实习-面经（已拿offer）</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/10/12/Java并发编程-volatile可见性的介绍/">Java并发编程-volatile可见性的介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/09/15/浅析MySQL中的explain参数/">浅析MySQL语句优化中的explain参数</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/29/看得懂的常见排序算法分析(java实现)/">常见排序算法分析Java实现(内附大量注释)</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/04/条件队列的唤醒机制探究/">条件队列的唤醒机制探究</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/07/28/并发编程笔记/">并发编程笔记</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2017-2018 杨凯文
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 2;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+            
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

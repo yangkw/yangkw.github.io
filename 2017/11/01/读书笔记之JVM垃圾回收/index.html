@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="杨凯文" />
+
+
+
+<meta name="description" content="前言​    如果要问Java与其他编程语言最大的不同是什么，我第一个想到的一定就是Java所运行的JVM所自带的自动垃圾回收机制，以下是我学习JVM垃圾回收机制整理的笔记，希望能对读者有一些帮助。">
+<meta name="keywords" content="Java,JVM,读书笔记,垃圾回收">
+<meta property="og:type" content="article">
+<meta property="og:title" content="读书笔记整理之JVM垃圾回收">
+<meta property="og:url" content="http://yangkw.github.io/2017/11/01/读书笔记之JVM垃圾回收/index.html">
+<meta property="og:site_name" content="Kevin&#39;s Blog">
+<meta property="og:description" content="前言​    如果要问Java与其他编程语言最大的不同是什么，我第一个想到的一定就是Java所运行的JVM所自带的自动垃圾回收机制，以下是我学习JVM垃圾回收机制整理的笔记，希望能对读者有一些帮助。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-10-05T15:11:13.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="读书笔记整理之JVM垃圾回收">
+<meta name="twitter:description" content="前言​    如果要问Java与其他编程语言最大的不同是什么，我第一个想到的一定就是Java所运行的JVM所自带的自动垃圾回收机制，以下是我学习JVM垃圾回收机制整理的笔记，希望能对读者有一些帮助。">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Kevin&#39;s Blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>读书笔记整理之JVM垃圾回收 | Kevin&#39;s Blog</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?8cec84d631c2e9b50fa5c523c42c9d8b";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">杨凯文</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">因为相信, 所以看见</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:kw89@qq.com" title="Email"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 知乎" href="https://www.zhihu.com/people/yangkw/activities" title="知乎"></a>
+                            
+                                <a class="fa SegmentFault" href="https://segmentfault.com/u/yangkw" title="SegmentFault"></a>
+                            
+                                <a class="fa Coding" href="https://github.com/yangkw" title="Coding"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">与世界分享收获与见解</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">杨凯文</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">杨凯文</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">因为相信, 所以看见</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:kw89@qq.com" title="Email"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 知乎" target="_blank" href="https://www.zhihu.com/people/yangkw/activities" title="知乎"></a>
+                            
+                                <a class="fa SegmentFault" target="_blank" href="https://segmentfault.com/u/yangkw" title="SegmentFault"></a>
+                            
+                                <a class="fa Coding" target="_blank" href="https://github.com/yangkw" title="Coding"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-读书笔记之JVM垃圾回收" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2017/11/01/读书笔记之JVM垃圾回收/" class="article-date">
+      <time datetime="2017-11-01T08:52:23.000Z" itemprop="datePublished">2017-11-01</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      读书笔记整理之JVM垃圾回收
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/垃圾回收/">垃圾回收</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/读书笔记/">读书笔记</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>​    如果要问Java与其他编程语言最大的不同是什么，我第一个想到的一定就是Java所运行的JVM所自带的自动垃圾回收机制，以下是我学习JVM垃圾回收机制整理的笔记，希望能对读者有一些帮助。<br><a id="more"></a></p>
+<h3 id="哪些内存需要回收？what？"><a href="#哪些内存需要回收？what？" class="headerlink" title="哪些内存需要回收？what？"></a>哪些内存需要回收？what？</h3><p>​    如何判断对象已死？有两种算法</p>
+<h4 id="引用计数算法"><a href="#引用计数算法" class="headerlink" title="引用计数算法"></a>引用计数算法</h4><p>​    给对象添加一个计数器，每当有一个地方引用它时，计数器的值就<strong>加一</strong>，当引用失效的时候，计数器就<strong>减一</strong> ，任何时刻计数器为0的对象就是不可能再被使用的时候。</p>
+<p>​    这个算法看似不错而且简单，不过存在这一个致命伤（当两个对象互相引用的时候，就永远不会被回收）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Obj</span></span>&#123;</span><br><span class="line">  <span class="keyword">public</span> Object instance=<span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Obj a=<span class="keyword">new</span> Obj();</span><br><span class="line">Obj b=<span class="keyword">new</span> Obj();</span><br><span class="line"></span><br><span class="line">a.instance=b;</span><br><span class="line">b.instance=a;</span><br><span class="line"></span><br><span class="line">a=<span class="keyword">null</span>;</span><br><span class="line">b=<span class="keyword">null</span>;</span><br></pre></td></tr></table></figure>
+<p>于是引用计数算法就永远回收不了这两个对象，下面介绍另一种算法。</p>
+<h4 id="可达性分析算法"><a href="#可达性分析算法" class="headerlink" title="可达性分析算法"></a>可达性分析算法</h4><p>​    通过一系列被称为“GC Roots”的对象作为起始点，从这些接点向下搜索，搜索所走过的路径称为引用链，当一个对象与任何一个引用链没有关联的时候则可以被回收。</p>
+<p>Java中，可作为GC Roots的对象包括下面集中</p>
+<ul>
+<li>虚拟机栈（栈帧中的本地变量表）中引用的对象</li>
+<li>方法区中类静态属性引用的对象</li>
+<li>方法区中常量引用的对象</li>
+<li>本地方法栈中JNI（Native方法）引用的对象</li>
+</ul>
+<h4 id="浅谈引用"><a href="#浅谈引用" class="headerlink" title="浅谈引用"></a>浅谈引用</h4><p>​    无论是计数器算法还是可达性分析算法，都与“引用”有关，下面是Java中4种引用，强度依次减弱</p>
+<h5 id="强引用"><a href="#强引用" class="headerlink" title="强引用"></a>强引用</h5><p>​    强引用就是我们平时最熟悉的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Object obj=<span class="keyword">new</span> Object();</span><br></pre></td></tr></table></figure>
+<p>​    只要强引用还存在，垃圾收集器永远不会回收掉被引用的对象。</p>
+<h5 id="软引用"><a href="#软引用" class="headerlink" title="软引用"></a>软引用</h5><p>​    发生gc的时候，如果JVM内存充足则不回收，用SoftReference类来实现软引用。展示一个例子</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SoftReference&lt;Object&gt; softReference=<span class="keyword">new</span> SoftReference&lt;&gt;(<span class="keyword">new</span> Object());</span><br><span class="line">System.out.println(<span class="string">"before gc  "</span>+softReference.get());</span><br><span class="line">System.gc();</span><br><span class="line">System.out.println(<span class="string">"after gc   "</span>+softReference.get());</span><br></pre></td></tr></table></figure>
+<p>​    以下是输出</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">before gc  java.lang.Object@<span class="number">2752f</span>6e2</span><br><span class="line">after gc   java.lang.Object@<span class="number">2752f</span>6e2</span><br></pre></td></tr></table></figure>
+<p>可以看到软引用的对象依然还在。</p>
+<h5 id="弱引用"><a href="#弱引用" class="headerlink" title="弱引用"></a>弱引用</h5><p>​    一旦发生gc，无论JVM内存充足与否，都会回收掉，用WeakReference类来实现弱引用。展示一个例子</p>
+<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">WeakReference&lt;<span class="keyword">Object</span>&gt; softReference=<span class="keyword">new</span> WeakReference&lt;&gt;(<span class="keyword">new</span> <span class="keyword">Object</span>());</span><br><span class="line">System.out.<span class="built_in">println</span>(<span class="string">"before gc  "</span>+softReference.<span class="built_in">get</span>());</span><br><span class="line">System.gc();</span><br><span class="line">System.out.<span class="built_in">println</span>(<span class="string">"after gc   "</span>+softReference.<span class="built_in">get</span>());</span><br></pre></td></tr></table></figure>
+<p>​    以下是输出</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">before <span class="keyword">gc</span>  java.lang.Object<span class="title">@2752</span>f<span class="number">6e2</span></span><br><span class="line">after <span class="keyword">gc</span>   <span class="keyword">null</span></span><br></pre></td></tr></table></figure>
+<p>弱引用的对象已经被回收！</p>
+<h5 id="虚引用"><a href="#虚引用" class="headerlink" title="虚引用"></a>虚引用</h5><p>​    虚引用也称为幽灵引用或者幻影引用，是最弱的一种引用，无法通过虚引用来取得一个对象实例，拥有虚引用的对象可以在任何时候被垃圾回收器回收。唯一的目的就是能在当这个对象被回收的时候收到一个系统通知，可用PhantomReference类实现虚引用。</p>
+<h4 id="回收方法区"><a href="#回收方法区" class="headerlink" title="回收方法区"></a>回收方法区</h4><p>​    垃圾回收大多发生在Heap（堆区），因为在方法区进行垃圾回收效率较低，要判定一个类是否是“无用的类”条件比较苛刻，类需要同时满足下面3个条件才能算是无用的类</p>
+<ul>
+<li>该类所有实例已经被回收，堆中不存在该类任何实例</li>
+<li>加载该类的ClassLoader已经被回收</li>
+<li>该类对应的java.lang.Class对象没有在任何地方被引用，无法在任何地方通过反射访问该类的方法。</li>
+</ul>
+<h3 id="什么时候回收？when？"><a href="#什么时候回收？when？" class="headerlink" title="什么时候回收？when？"></a>什么时候回收？when？</h3><p>​    首先，GC又分为minor GC 和 Full Gc(也称为Major GC)。Java 堆内存分为新生代和老年代，新生代中又分为1个Eden区域 和两个 Survivor区域。</p>
+<p>那么对于 Minor GC 的触发条件：大多数情况下，直接在 Eden 区中进行分配。如果 Eden区域没有足够的空间，那么就会发起一次 Minor GC；对于 Full GC（Major GC）的触发条件：也是如果老年代没有足够空间的话，那么就会进行一次 Full GC。</p>
+<p>注意：上面所说的只是一般情况，实际上，需要考虑一个空间分配担保的问题：</p>
+<p>在发生Minor GC之前，虚拟机会先检查老年代最大可用的连续空间是否大于新生代所有对象的总空间。如果大于则进行Minor GC，如果小于则看HandlePromotionFailure设置是否允许担保失败（不允许则直接Full GC）。如果允许，那么会继续检查老年代最大可用的连续空间是否大于历次晋升到老年代对象的平均大小，如果大于则尝试Minor GC（如果尝试失败也会触发Full GC），如果小于则进行Full GC。</p>
+<p><strong>System.gc()就是指的Full GC</strong></p>
+<p>但是，具体程序执行到什么位置才会自动gc，这儿提两个概念Safepoint和SafeRegion。</p>
+<h4 id="安全点（Safepoint）"><a href="#安全点（Safepoint）" class="headerlink" title="安全点（Safepoint）"></a>安全点（Safepoint）</h4><p>​    安全点的选定是以程序“是否具有让程序长时间执行的特征”为标准选定的，“长时间执行”最明显的特征就是</p>
+<ol>
+<li><p>指令序列复用</p>
+</li>
+<li><p>循环跳转</p>
+</li>
+<li><p>异常跳转等</p>
+</li>
+</ol>
+<p>对于Safepoint如何在GC发生时让所有线程都跑到最近的安全点上停下来，有两种方案<strong>抢先式中断</strong>和<strong>主动式中断</strong>。</p>
+<p><strong>抢先式中断</strong>：不需要线程执行的代码主动配合，GC发生时，首先把所有线程全部中断，如果发现有线程中断的地方不在安全点上，就恢复线程，让它“跑到”安全点上。（这种方案几乎很少使用）</p>
+<p><strong>主动式中断</strong> ：当GC需要中断线程的时候，不直接对线程操作，仅仅简单设置一个标志，各个线程执行时主动去轮询这个标志，发现为true就自动挂起，轮询的地方和安全点是重合的。</p>
+<h4 id="安全区域（Saferegion）"><a href="#安全区域（Saferegion）" class="headerlink" title="安全区域（Saferegion）"></a>安全区域（Saferegion）</h4><p>​    当线程处于Sleep状态或者Blocked状态，这时候线程无法响应JVM的中断请求，“走”到安全的地方去中断挂起，JVM也显然不太可能等待线程重新被分配CPU时间，这时候就需要安全区域来解决。</p>
+<p>​    当线程执行到Safe Region中的代码时，首先标识自己已经进入了Safe Region，当JVM在发起GC时，就不用管标识自己为Safe Region状态的线程了。在线程要离开Safe Region时，他要检查系统是否完成了整个GC过程，如果完成了，线程就继续执行，否则必须等待直到收到可以安全离开Safe Region的信号为止。</p>
+<h3 id="如何回收？how？"><a href="#如何回收？how？" class="headerlink" title="如何回收？how？"></a><strong>如何</strong>回收？how？</h3><h4 id="标记-清除-算法"><a href="#标记-清除-算法" class="headerlink" title="标记-清除 算法"></a>标记-清除 算法</h4><p>​    算法分为<strong>标记</strong>和<strong>清除</strong>两个阶段，首先标记出所有需要回收的对象，在标记完成后统一回收所有被标记的对象。他的不足主要有两个： </p>
+<ol>
+<li>效率问题：标记和清除两个过程的效率都不高</li>
+<li>空间问题：标记清除之后，会产生大量不连续的内存碎片，空间碎片太多可能会导致之后分配大对象时，无法找到足够的连续内存而提前触发GC</li>
+</ol>
+<h4 id="复制算法"><a href="#复制算法" class="headerlink" title="复制算法"></a>复制算法</h4><p>​    复制算法可以将容量划分为大小相等的两块，每次只使用其中的一块，当一块内存被用完了就将还存活的对象一次复制到另一块内存上，然后把已经使用过的内存一次清理掉。不过因此内存缩小为原来的一半，代价过高。</p>
+<p>​    现在的商业虚拟机普遍采用这种算法来回收新生代，将新生代分为较大的<strong>一块</strong>Eden空间和<strong>两块</strong>较小的Survivor空间，HotSpot默认其比例为8：1：1，使用时，每次使用Eden加上其中一块Survivor，回收时，将Eden和Survivor中还存活的对象一次性复制到另一块Survivor中，最后清理掉Eden和刚才用过的Survivor区。</p>
+<h4 id="标记-整理-算法"><a href="#标记-整理-算法" class="headerlink" title="标记-整理 算法"></a>标记-整理 算法</h4><p>​    标记过程与“标记-清除”算法一样，然后让所有存活的对象都向同一端移动，然后直接清理端边界以外的内存。    </p>
+<h4 id="分代收集算法"><a href="#分代收集算法" class="headerlink" title="分代收集算法"></a>分代收集算法</h4><p>​    将Java堆分为新生代和老年代，在新生代中每次垃圾回收都有大批对象死去，少量存活，可以使用复制算法，而老年代中对象存活率高没有额外的空间对它进行分配担保，必须使用“标记-整理”或者“标记-清理”算法来回收。</p>
+<h3 id="谈谈G1垃圾收集器"><a href="#谈谈G1垃圾收集器" class="headerlink" title="谈谈G1垃圾收集器"></a>谈谈G1垃圾收集器</h3><p>​    在最近更新的JDK9中，JVM默认的垃圾收集器切换成了G1，那么G1有什么特点呢？总结以下最大的四个特点</p>
+<ul>
+<li>并行与并发：G1能充分利用多CPU、多核环境下的硬件优势，使用多个CPU，（CPU或者CPU核心）来缩短Stop-The-World停顿的时间，部分其他收集器需要停顿Java线程执行的GC动作，G1可以通过并发的方式让Java继续执行。</li>
+<li>分代收集：G1不需要其他收集器配合就能独立管理整个GC堆，G1采用不同的方式去处理<strong>新创建的对象</strong>、<strong>已经存活一段时间的对象</strong>、<strong>熬过多次GC的旧对象</strong>以获取更好的收集效果。</li>
+<li>空间整合：G1从整体来看是基于“标记-整理”算法，局部上来看是基于复制算法，这两种算法都不会产生内存碎片，有利于程序长时间运行。</li>
+<li>可预测的停顿：G1除了追求低停顿外，还能建立可预测的停顿时间模型，能让使用者明确指定在一个长度为M毫秒的时间片段内，消耗在垃圾收集上的时间不超过N毫秒。</li>
+</ul>
+<h3 id="资料来源"><a href="#资料来源" class="headerlink" title="资料来源"></a>资料来源</h3><blockquote>
+<p>《深入理解Java虚拟机》P61-P84</p>
+</blockquote>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2017/11/01/读书笔记之JVM垃圾回收/">读书笔记整理之JVM垃圾回收</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">杨凯文</a></p>
+        <p><span>发布时间:</span>2017-11-01, 16:52:23</p>
+        <p><span>最后更新:</span>2018-10-05, 23:11:13</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2017/11/01/读书笔记之JVM垃圾回收/" title="读书笔记整理之JVM垃圾回收">http://yangkw.github.io/2017/11/01/读书笔记之JVM垃圾回收/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yangkw.github.io/2017/11/01/读书笔记之JVM垃圾回收/　　作者: 杨凯文" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2017/11/11/利用反射及循环构造Bean的一次实践/">
+                    利用反射及循环构造Bean的一次实践
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2017/10/18/网易考拉海购Java后台开发实习-面经（已拿offer）/">
+                    网易考拉海购Java后台开发实习-面经（已拿offer）
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#哪些内存需要回收？what？"><span class="toc-number">2.</span> <span class="toc-text">哪些内存需要回收？what？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#引用计数算法"><span class="toc-number">2.1.</span> <span class="toc-text">引用计数算法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#可达性分析算法"><span class="toc-number">2.2.</span> <span class="toc-text">可达性分析算法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#浅谈引用"><span class="toc-number">2.3.</span> <span class="toc-text">浅谈引用</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#强引用"><span class="toc-number">2.3.1.</span> <span class="toc-text">强引用</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#软引用"><span class="toc-number">2.3.2.</span> <span class="toc-text">软引用</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#弱引用"><span class="toc-number">2.3.3.</span> <span class="toc-text">弱引用</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#虚引用"><span class="toc-number">2.3.4.</span> <span class="toc-text">虚引用</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#回收方法区"><span class="toc-number">2.4.</span> <span class="toc-text">回收方法区</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么时候回收？when？"><span class="toc-number">3.</span> <span class="toc-text">什么时候回收？when？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#安全点（Safepoint）"><span class="toc-number">3.1.</span> <span class="toc-text">安全点（Safepoint）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#安全区域（Saferegion）"><span class="toc-number">3.2.</span> <span class="toc-text">安全区域（Saferegion）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#如何回收？how？"><span class="toc-number">4.</span> <span class="toc-text">如何回收？how？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#标记-清除-算法"><span class="toc-number">4.1.</span> <span class="toc-text">标记-清除 算法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#复制算法"><span class="toc-number">4.2.</span> <span class="toc-text">复制算法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#标记-整理-算法"><span class="toc-number">4.3.</span> <span class="toc-text">标记-整理 算法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#分代收集算法"><span class="toc-number">4.4.</span> <span class="toc-text">分代收集算法</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#谈谈G1垃圾收集器"><span class="toc-number">5.</span> <span class="toc-text">谈谈G1垃圾收集器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#资料来源"><span class="toc-number">6.</span> <span class="toc-text">资料来源</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"读书笔记整理之JVM垃圾回收　| Kevin's Blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2017/11/11/利用反射及循环构造Bean的一次实践/" title="上一篇: 利用反射及循环构造Bean的一次实践">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2017/10/18/网易考拉海购Java后台开发实习-面经（已拿offer）/" title="下一篇: 网易考拉海购Java后台开发实习-面经（已拿offer）">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/08/24/IO/">通过IO模型带来的思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/01/Spring-IOC源码跟踪记录/">Spring IOC源码跟踪记录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/22/几行代码实现RPC框架/">几行代码实现RPC框架</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/06/事务/">MySQL事务原理浅析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/12/大三Java实习总结网易百度小米美团阿里/">Java实习总结网易百度小米美团阿里</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/11/11/利用反射及循环构造Bean的一次实践/">利用反射及循环构造Bean的一次实践</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/11/01/读书笔记之JVM垃圾回收/">读书笔记整理之JVM垃圾回收</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/10/18/网易考拉海购Java后台开发实习-面经（已拿offer）/">网易考拉海购Java后台开发实习-面经（已拿offer）</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/10/12/Java并发编程-volatile可见性的介绍/">Java并发编程-volatile可见性的介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/09/15/浅析MySQL中的explain参数/">浅析MySQL语句优化中的explain参数</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/29/看得懂的常见排序算法分析(java实现)/">常见排序算法分析Java实现(内附大量注释)</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/04/条件队列的唤醒机制探究/">条件队列的唤醒机制探究</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/07/28/并发编程笔记/">并发编程笔记</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2017-2018 杨凯文
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 2;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+            
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
