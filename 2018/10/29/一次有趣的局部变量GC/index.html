@@ -15,23 +15,23 @@
 
 
 
-<meta name="description" content="前言最近在看《实战Java虚拟机 ,发现书上的一个关于局部变量表GC挺有意思，先上代码。">
+<meta name="description" content="前言最近在看《实战Java虚拟机》,发现书上的一个关于局部变量表GC挺有意思，先上代码。">
 <meta name="keywords" content="Java,JVM">
 <meta property="og:type" content="article">
 <meta property="og:title" content="一次有趣的局部变量GC">
 <meta property="og:url" content="http://yangkw.github.io/2018/10/29/一次有趣的局部变量GC/index.html">
 <meta property="og:site_name" content="Kevin&#39;s Blog">
-<meta property="og:description" content="前言最近在看《实战Java虚拟机 ,发现书上的一个关于局部变量表GC挺有意思，先上代码。">
+<meta property="og:description" content="前言最近在看《实战Java虚拟机》,发现书上的一个关于局部变量表GC挺有意思，先上代码。">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6ede3a3ee5.png">
 <meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6eed22745f.png">
 <meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6efd17f2c2.png">
 <meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6f128c4e2e.png">
 <meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6fb2db51fc.jpg">
-<meta property="og:updated_time" content="2018-10-29T12:25:20.056Z">
+<meta property="og:updated_time" content="2018-10-29T12:26:36.833Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="一次有趣的局部变量GC">
-<meta name="twitter:description" content="前言最近在看《实战Java虚拟机 ,发现书上的一个关于局部变量表GC挺有意思，先上代码。">
+<meta name="twitter:description" content="前言最近在看《实战Java虚拟机》,发现书上的一个关于局部变量表GC挺有意思，先上代码。">
 <meta name="twitter:image" content="https://i.loli.net/2018/10/29/5bd6ede3a3ee5.png">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
@@ -277,7 +277,7 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近在看《实战Java虚拟机 ,发现书上的一个关于局部变量表GC挺有意思，先上代码。<br><a id="more"></a></p>
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近在看《实战Java虚拟机》,发现书上的一个关于局部变量表GC挺有意思，先上代码。<br><a id="more"></a></p>
 <h3 id="主角"><a href="#主角" class="headerlink" title="主角"></a>主角</h3><h4 id="没有GC"><a href="#没有GC" class="headerlink" title="没有GC"></a>没有GC</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">reversion</span><span class="params">()</span></span>&#123;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">byte</span>[] a = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">6</span>*<span class="number">1024</span>*<span class="number">1024</span>];</span><br><span class="line">        &#125;</span><br><span class="line">        System.gc();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        reversion();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>分配了一块6MB的堆空间，并使用局部变量引用这块空间, 然后显式进行一次Full GC。</p>
 <p><img src="https://i.loli.net/2018/10/29/5bd6ede3a3ee5.png" alt="image-20181029192234982"></p>
@@ -306,7 +306,7 @@
         <p><span>本文标题:</span><a href="/2018/10/29/一次有趣的局部变量GC/">一次有趣的局部变量GC</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">杨凯文</a></p>
         <p><span>发布时间:</span>2018-10-29, 20:24:50</p>
-        <p><span>最后更新:</span>2018-10-29, 20:25:20</p>
+        <p><span>最后更新:</span>2018-10-29, 20:26:36</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2018/10/29/一次有趣的局部变量GC/" title="一次有趣的局部变量GC">http://yangkw.github.io/2018/10/29/一次有趣的局部变量GC/</a>
             <span class="copy-path" data-clipboard-text="原文: http://yangkw.github.io/2018/10/29/一次有趣的局部变量GC/　　作者: 杨凯文" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
