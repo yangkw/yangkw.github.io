@@ -15,18 +15,24 @@
 
 
 
-<meta name="description" content="IO模型对于IO，我们经常可以听到诸如同步阻塞IO，同步非阻塞IO，异步IO等等，那么什么是异步/同步，什么是阻塞/非阻塞？首先一次IO在UNIX系统中分为两个步骤">
-<meta name="keywords" content="Java,IO">
+<meta name="description" content="前言最近在看《实战Java虚拟机 ,发现书上的一个关于局部变量表GC挺有意思，先上代码。">
+<meta name="keywords" content="Java,JVM">
 <meta property="og:type" content="article">
-<meta property="og:title" content="通过IO模型带来的思考">
-<meta property="og:url" content="http://yangkw.github.io/2018/08/24/IO/index.html">
+<meta property="og:title" content="一次有趣的局部变量GC">
+<meta property="og:url" content="http://yangkw.github.io/2018/10/29/一次有趣的局部变量GC/index.html">
 <meta property="og:site_name" content="Kevin&#39;s Blog">
-<meta property="og:description" content="IO模型对于IO，我们经常可以听到诸如同步阻塞IO，同步非阻塞IO，异步IO等等，那么什么是异步/同步，什么是阻塞/非阻塞？首先一次IO在UNIX系统中分为两个步骤">
+<meta property="og:description" content="前言最近在看《实战Java虚拟机 ,发现书上的一个关于局部变量表GC挺有意思，先上代码。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-10-06T16:22:25.000Z">
+<meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6ede3a3ee5.png">
+<meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6eed22745f.png">
+<meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6efd17f2c2.png">
+<meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6f128c4e2e.png">
+<meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6fb2db51fc.jpg">
+<meta property="og:updated_time" content="2018-10-29T12:25:20.056Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="通过IO模型带来的思考">
-<meta name="twitter:description" content="IO模型对于IO，我们经常可以听到诸如同步阻塞IO，同步非阻塞IO，异步IO等等，那么什么是异步/同步，什么是阻塞/非阻塞？首先一次IO在UNIX系统中分为两个步骤">
+<meta name="twitter:title" content="一次有趣的局部变量GC">
+<meta name="twitter:description" content="前言最近在看《实战Java虚拟机 ,发现书上的一个关于局部变量表GC挺有意思，先上代码。">
+<meta name="twitter:image" content="https://i.loli.net/2018/10/29/5bd6ede3a3ee5.png">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
@@ -58,7 +64,7 @@
 <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 
 
-<title>通过IO模型带来的思考 | Kevin&#39;s Blog</title>
+<title>一次有趣的局部变量GC | Kevin&#39;s Blog</title>
 
 <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
@@ -231,11 +237,11 @@
     </div>
     <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
 </nav>
-      <div class="body-wrap"><article id="post-IO" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-一次有趣的局部变量GC" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2018/08/24/IO/" class="article-date">
-      <time datetime="2018-08-24T08:11:01.000Z" itemprop="datePublished">2018-08-24</time>
+      <a href="/2018/10/29/一次有趣的局部变量GC/" class="article-date">
+      <time datetime="2018-10-29T12:24:50.000Z" itemprop="datePublished">2018-10-29</time>
 </a>
 
 
@@ -250,7 +256,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      通过IO模型带来的思考
+      一次有趣的局部变量GC
     </h1>
   
 
@@ -261,7 +267,7 @@
 
         
     <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/IO/">IO</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li></ul>
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li></ul>
     </div>
 
         <div class="clearfix"></div>
@@ -271,29 +277,24 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <h3 id="IO模型"><a href="#IO模型" class="headerlink" title="IO模型"></a>IO模型</h3><p>对于IO，我们经常可以听到诸如同步阻塞IO，同步非阻塞IO，异步IO等等，那么什么是异步/同步，什么是阻塞/非阻塞？首先一次IO在UNIX系统中分为两个步骤</p>
-<a id="more"></a>
-<p><strong>1.发起IO请求：</strong>用户线程向操作系统内核发起IO请求</p>
-<p><strong>2.执行IO操作：</strong>当内核准备好数据可以提交给发起IO请求的线程</p>
-<p>阻塞/非阻塞的区别：发起IO请求之后会一直等待直到获取数据则是阻塞，否则是非阻塞</p>
-<p>同步/异步的区别：获取到的数据是自己主动拿到的则是同步，是被动拿到的则是异步</p>
-<p>下面我用<strong>取快递</strong>这个例子来介绍一下UNIX的五种IO模型</p>
-<p>众所周知吸管喝饮料分为两个步骤：1.打开快递柜（发起IO请求），2.取走快递（执行IO操作）</p>
-<h4 id="同步-amp-阻塞IO"><a href="#同步-amp-阻塞IO" class="headerlink" title="同步&amp;阻塞IO"></a>同步&amp;阻塞IO</h4><p>打开快递柜（发起IO请求），如果快递柜里没有东西（内核没有准备好数据），则一直等在快递柜旁等快递来（阻塞直到内核准备好数据），快递柜有了快递则取走（用户线程读取内核中的数据）。</p>
-<p>整个流程除了拿快递，等快递不能做其他事</p>
-<h4 id="同步-amp-非阻塞IO"><a href="#同步-amp-非阻塞IO" class="headerlink" title="同步&amp;非阻塞IO"></a>同步&amp;非阻塞IO</h4><p>打开快递柜（发起IO请求），如果快递柜里没有东西（内核没有准备好数据），则马上做其他事情每隔一段时间就去快递柜里打开看看是否有快递（轮询内核是否准备好数据），快递柜有了快递则取走（用户线程读取内核中的数据）。</p>
-<p>尽管这个模型相对同步阻塞IO效率有一定提升，但是大量的无用轮询造成了CPU的空转，很少使用这种IO模型</p>
-<h4 id="同步-amp-多路复用IO"><a href="#同步-amp-多路复用IO" class="headerlink" title="同步&amp;多路复用IO"></a>同步&amp;多路复用IO</h4><p>需要同时取N个快递，派一个人帮你监视快递柜，告诉他你想要哪个快递比如告诉他我要天猫的快递，然后这个监视者一直站在快递柜旁边等待天猫快递到来并签收，我们只需要向这个监视者拿快递就行了。</p>
-<p>这个模型中，监视者就是我们Java NIO中的Selector，一个线程阻塞同时监管多个线程连接状态，返回给调用者连接状态满足所注册的状态条件连接线程。</p>
-<h4 id="同步-amp-信号驱动IO"><a href="#同步-amp-信号驱动IO" class="headerlink" title="同步&amp;信号驱动IO"></a>同步&amp;信号驱动IO</h4><p>在快递柜上写上自己的手机号（回调函数），当快递送过来的时候直接给我打电话（执行回调函数），然后我去取快递。</p>
-<h4 id="异步IO"><a href="#异步IO" class="headerlink" title="异步IO"></a>异步IO</h4><p>假设收快递的是一个国王，只需要叫一声 我想要收到我的快递，剩下的都不用国王自己操心了，会派人去快递柜门口等快递，然后会有人帮忙把快递送到手上（用户线程）</p>
-<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><p>其实同步异步/阻塞非阻塞并非只是在计算机的世界里有，在互联网时代，大部分的场景都在经历IO模型之间的转变</p>
-<p><strong>网购/外卖</strong>：就是一种异步IO，商品（数据）从卖家/餐厅（内核态）被送货员送到家（线程态），传统的从家里到餐厅然后吃饭，吃了回家，就是一种典型的同步阻塞IO。</p>
-<p><strong>滴滴打车</strong>：是一种信号驱动IO，在滴滴上下单过后就只需等待滴滴<strong>软件提示</strong>（回调函数）已经分配好司机并且正在来接你。传统的方式则是自己要在路口等出租车/公交车，同步阻塞IO。</p>
-<p><strong>微信/短信</strong>：非阻塞同步IO，要通知其他人直接把信息发出去就不用管了，一段时间去看看对方是否有回复（轮询）。而传统的打电话则要确保对方接听并将信息告知对方，同步阻塞IO。</p>
-<p><strong>种植业</strong>：多路复用IO，比如farmer每天去看果园哪些苹果红了（满足注册的条件）就将红苹果收下来。如果种植业机械化程度够高，则可以变成异步IO的模式，种植，浇水，收割全部由机器完成。</p>
-<p>等等</p>
-<p>社会上所有能够提升效率的场景，基本可以用IO模型去进行思考，演进过程也大致是从同步—》异步，阻塞—》非阻塞</p>
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近在看《实战Java虚拟机 ,发现书上的一个关于局部变量表GC挺有意思，先上代码。<br><a id="more"></a></p>
+<h3 id="主角"><a href="#主角" class="headerlink" title="主角"></a>主角</h3><h4 id="没有GC"><a href="#没有GC" class="headerlink" title="没有GC"></a>没有GC</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">reversion</span><span class="params">()</span></span>&#123;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">byte</span>[] a = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">6</span>*<span class="number">1024</span>*<span class="number">1024</span>];</span><br><span class="line">        &#125;</span><br><span class="line">        System.gc();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        reversion();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>分配了一块6MB的堆空间，并使用局部变量引用这块空间, 然后显式进行一次Full GC。</p>
+<p><img src="https://i.loli.net/2018/10/29/5bd6ede3a3ee5.png" alt="image-20181029192234982"></p>
+<p>先配置一下JVM参数用于打印GC log</p>
+<p><img src="https://i.loli.net/2018/10/29/5bd6eed22745f.png" alt=""></p>
+<p>可以看到这块6MB的堆空间并没有被回收, 接下来加一行代码就能使得堆空间被回收。</p>
+<h4 id="可以GC"><a href="#可以GC" class="headerlink" title="可以GC"></a>可以GC</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">reversion</span><span class="params">()</span></span>&#123;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">byte</span>[] a = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">6</span>*<span class="number">1024</span>*<span class="number">1024</span>];</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> c = <span class="number">0</span>;</span><br><span class="line">        System.gc();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        reversion();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://i.loli.net/2018/10/29/5bd6efd17f2c2.png" alt=""></p>
+<p>可以看到这6MB的空间已经被回收了，仅仅因为多了一句看似与a毫无关系的 <strong>int c = 0;</strong> </p>
+<h3 id="答案"><a href="#答案" class="headerlink" title="答案"></a>答案</h3><p>借助jclasslib工具我们进一步查看函数的局部变量信息, 在此之前我们需要对代码做一点小改动再进行分析</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">reversion</span><span class="params">()</span></span>&#123;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">byte</span>[] a = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">6</span>*<span class="number">1024</span>*<span class="number">1024</span>];</span><br><span class="line">            System.out.println(a[<span class="number">0</span>]);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> c = <span class="number">0</span>;</span><br><span class="line">        System.gc();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        reversion();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>tips</strong>：JVM即时编译器拥有<strong>死代码消除</strong>的特性，a数组并没有被任何地方使用，即时编译器可以精简数据流，并且减少编译时间以及最终生成机器码的大小。简单的说如果a没有被使用的话会被编译成var0, 我们在本地变量表中看不到a了。</p>
+<p><img src="https://i.loli.net/2018/10/29/5bd6f128c4e2e.png" alt=""></p>
+<p>可以看到a和c在局部变量表中的索引值都是0，也就是说c重用了a在局部变量表中的槽位，从而使得a指向的堆空间能够被GC回收</p>
+<p><strong>栈帧中的局部变量表中的槽位是可以重用的，如果一个局部变量过了其作用域，那么在其作用域之后申明的新的局部变量就很有可能复用过期局部变量的槽位，从而达到节省资源的目的</strong></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>通过这个GC的小例子，切实感受到了JVM对于资源节省的严苛程度，对于作用域的细粒度把控之强大。给大家推荐我读的这本《实战Java虚拟机》，切实的一本好书，所谓好书无非两点：1.能读懂 2.有所获。同时也推荐极客时间的《深入拆解虚拟机》，多路学习，兼听则明。</p>
+<p>最后打个小广告～<img src="https://i.loli.net/2018/10/29/5bd6fb2db51fc.jpg" alt=""></p>
 
       
     </div>
@@ -302,13 +303,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2018/08/24/IO/">通过IO模型带来的思考</a></p>
+        <p><span>本文标题:</span><a href="/2018/10/29/一次有趣的局部变量GC/">一次有趣的局部变量GC</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">杨凯文</a></p>
-        <p><span>发布时间:</span>2018-08-24, 16:11:01</p>
-        <p><span>最后更新:</span>2018-10-07, 00:22:25</p>
+        <p><span>发布时间:</span>2018-10-29, 20:24:50</p>
+        <p><span>最后更新:</span>2018-10-29, 20:25:20</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2018/08/24/IO/" title="通过IO模型带来的思考">http://yangkw.github.io/2018/08/24/IO/</a>
-            <span class="copy-path" data-clipboard-text="原文: http://yangkw.github.io/2018/08/24/IO/　　作者: 杨凯文" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2018/10/29/一次有趣的局部变量GC/" title="一次有趣的局部变量GC">http://yangkw.github.io/2018/10/29/一次有趣的局部变量GC/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yangkw.github.io/2018/10/29/一次有趣的局部变量GC/　　作者: 杨凯文" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
         <p>
@@ -320,16 +321,10 @@
 
     <nav id="article-nav">
         
-            <div id="article-nav-newer" class="article-nav-title">
-                <a href="/2018/10/28/设计模式要点总结/">
-                    常见设计模式要点总结
-                </a>
-            </div>
-        
         
             <div id="article-nav-older" class="article-nav-title">
-                <a href="/2018/08/01/Spring-IOC源码跟踪记录/">
-                    Spring IOC源码跟踪记录
+                <a href="/2018/10/28/设计模式要点总结/">
+                    常见设计模式要点总结
                 </a>
             </div>
         
@@ -341,7 +336,7 @@
     <div id="toc" class="toc-article">
         <strong class="toc-title">文章目录</strong>
         
-            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#IO模型"><span class="toc-number">1.</span> <span class="toc-text">IO模型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#同步-amp-阻塞IO"><span class="toc-number">1.1.</span> <span class="toc-text">同步&amp;阻塞IO</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#同步-amp-非阻塞IO"><span class="toc-number">1.2.</span> <span class="toc-text">同步&amp;非阻塞IO</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#同步-amp-多路复用IO"><span class="toc-number">1.3.</span> <span class="toc-text">同步&amp;多路复用IO</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#同步-amp-信号驱动IO"><span class="toc-number">1.4.</span> <span class="toc-text">同步&amp;信号驱动IO</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#异步IO"><span class="toc-number">1.5.</span> <span class="toc-text">异步IO</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#思考"><span class="toc-number">2.</span> <span class="toc-text">思考</span></a></li></ol>
+            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#主角"><span class="toc-number">2.</span> <span class="toc-text">主角</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#没有GC"><span class="toc-number">2.1.</span> <span class="toc-text">没有GC</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#可以GC"><span class="toc-number">2.2.</span> <span class="toc-text">可以GC</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#答案"><span class="toc-number">3.</span> <span class="toc-text">答案</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
         
     </div>
     <style>
@@ -377,7 +372,7 @@
         </div>
         <script>
             window._bd_share_config={
-                "common":{"bdSnsKey":{},"bdText":"通过IO模型带来的思考　| Kevin's Blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+                "common":{"bdSnsKey":{},"bdText":"一次有趣的局部变量GC　| Kevin's Blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
         </script>
     
 
@@ -397,15 +392,13 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2018/10/28/设计模式要点总结/" title="上一篇: 常见设计模式要点总结">
-                <i class="fa fa-angle-left"></i>
-            </a>
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
 
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
 
         
-            <a href="/2018/08/01/Spring-IOC源码跟踪记录/" title="下一篇: Spring IOC源码跟踪记录">
+            <a href="/2018/10/28/设计模式要点总结/" title="下一篇: 常见设计模式要点总结">
                 <i class="fa fa-angle-right"></i>
             </a>
         
