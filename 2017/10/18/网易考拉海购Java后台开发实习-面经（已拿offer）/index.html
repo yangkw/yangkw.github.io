@@ -15,18 +15,18 @@
 
 
 
-<meta name="description" content="一面（23min） 自我介绍  项目中最自豪的部分">
+<meta name="description" content="一面（23min） 自我介绍 项目中最自豪的部分">
 <meta name="keywords" content="Java,面经">
 <meta property="og:type" content="article">
 <meta property="og:title" content="网易考拉海购Java后台开发实习-面经（已拿offer）">
 <meta property="og:url" content="http://yangkw.github.io/2017/10/18/网易考拉海购Java后台开发实习-面经（已拿offer）/index.html">
 <meta property="og:site_name" content="Kevin&#39;s Blog">
-<meta property="og:description" content="一面（23min） 自我介绍  项目中最自豪的部分">
+<meta property="og:description" content="一面（23min） 自我介绍 项目中最自豪的部分">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-10-05T15:11:13.000Z">
+<meta property="og:updated_time" content="2018-10-30T04:10:43.832Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="网易考拉海购Java后台开发实习-面经（已拿offer）">
-<meta name="twitter:description" content="一面（23min） 自我介绍  项目中最自豪的部分">
+<meta name="twitter:description" content="一面（23min） 自我介绍 项目中最自豪的部分">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
@@ -272,48 +272,28 @@
       
           
         <h3 id="一面（23min）"><a href="#一面（23min）" class="headerlink" title="一面（23min）"></a>一面（23min）</h3><ul>
-<li><p>自我介绍</p>
-</li>
+<li>自我介绍</li>
 <li><p>项目中最自豪的部分<br></p>
 <a id="more"></a>
 <p><strong>也没什么太自豪的，就是在移动端开发的时候不存在cookie和session，然后用redis存了一下验证码感觉还不错。</strong></p>
 </li>
-<li><p>讲一讲ArrayList和LinkedList<br><br> <strong>ArrayList底层实现是数组，并且每次扩容扩容1.5倍，常用在查询较多的场景中。而LinkedList底层实现是链表常用在增删比较多的场景</strong></p>
-</li>
-<li><p>你说你对锁有了解，说一说你最熟悉的两个锁<br> <br><br> 当时太紧张就随口说了两个，<strong>乐观锁，悲观锁。乐观锁：每次执行事务的时候都是先执行在检查是否有其他是否在执行。而悲观锁如行锁，表锁，都是先锁定再执行事务。通常在并发量比较大的情况下用悲观锁，并发量小的情况下用乐观锁</strong></p>
-</li>
-<li><p>说一下synchronied和ReentrantLock的区别<br> <br><strong>synchronied是JVM级别的，而ReentrantLock是api级别的，JVM会对synchronied做出相应的优化，锁消除：当JVM判定该资源不会被其他线程争夺的时候就会消除该锁，还有锁自旋，自适应锁</strong>（面试官速度很快，还没等我来得及解释ReentrantLock就跳下一个问题了，也许是这个超底层的回答比较满意吧）</p>
-</li>
-<li><p>讲一下ThreadLoacal吧<br><br><strong>ThreadLocal底层实现是一个Map结构的表，key是Thread.currentThread（）,而Value则是我们想要保存的对象</strong></p>
-</li>
-<li><p>它（ThreadLocal）有什么用，可以举一个例子吗？<br><br><strong>可以在每个线程都拥有一个各自的副本，封装起来不被影响，作用的话，可以做一个类似卖票的系统，每个售票厅（线程）只能出售100张票，不能多不能少</strong></p>
-</li>
-<li><p>用过exchange（）吗<br><br><strong>不好意思，只敲过一次例子，不太了解</strong></p>
-</li>
-<li><p>说一说JVM内存模型吧<br><br><strong>我：栈区：每次方法的执行都会有一次栈帧的生成，并且其中有局部变量表。堆区：每次new出来的对象都保存在这儿。本地方法栈：通过C/C++调用系统接口的一些方法，方法区：类的信息 静态变量都在这儿，还有程序计数器</strong></p>
-</li>
-<li><p>说一说AOP吧</p>
-</li>
-<li><p><strong>AOP就是面向切面编程，并解释了下列术语，joinpoint，pointcut，aspect，advice，并说了一下实现的原理，若实现了接口就是JDK动态代理否则就用CGLIB</strong></p>
-</li>
-<li><p>了解asm吗？<br><br><strong>我反应了半天才想起这是一个jar包，不过从没了解过就说不知道了</strong></p>
-</li>
-<li><p>String str1=new String(“abc”),String str2=new String(“abc”); str1==str2返回什么<br><strong>当时太紧张，注意力一直放在abc字符串上了忽略了这是new了一个对象，一直回答true，反问我很久我还是没反应过来，有点没发挥好</strong></p>
-</li>
-<li><p>知道如何让线程同步吗？<br><br><strong>wait，notify，notifyAll，await，signal，siganlAll，countdownLatch，cyclicbarrer</strong></p>
-</li>
-<li><p>说一说countdownlatch，cyclicbarrer<br><br><strong>都可以等几个线程就绪后再执行后续操作，区别就是cyclicbarrer是可以复用的，而countdownlatch不可以</strong></p>
-</li>
-<li><p>举个例子？<br><br><strong>可以假设以下场景，等9个跑步选手（线程）同时在起跑线就绪了再开始起跑</strong></p>
-</li>
-<li><p>可以实习多久</p>
-</li>
-<li><p>你的职业规划</p>
-</li>
-<li><p>你有什么想问我的吗？<br></p>
-<h6 id="最后面试官简单评价了一下：看得出来你平时看了很多书，不过前面有一两个答错了，你开始很紧张，后来好了一些。"><a href="#最后面试官简单评价了一下：看得出来你平时看了很多书，不过前面有一两个答错了，你开始很紧张，后来好了一些。" class="headerlink" title="最后面试官简单评价了一下：看得出来你平时看了很多书，不过前面有一两个答错了，你开始很紧张，后来好了一些。"></a>最后面试官简单评价了一下：看得出来你平时看了很多书，不过前面有一两个答错了，你开始很紧张，后来好了一些。</h6></li>
-</ul>
-<h3 id="二面（14min）"><a href="#二面（14min）" class="headerlink" title="二面（14min）"></a>二面（14min）</h3><ul>
+<li>讲一讲ArrayList和LinkedList<br><br> <strong>ArrayList底层实现是数组，并且每次扩容扩容1.5倍，常用在查询较多的场景中。而LinkedList底层实现是链表常用在增删比较多的场景</strong></li>
+<li>你说你对锁有了解，说一说你最熟悉的两个锁<br> <br><br> 当时太紧张就随口说了两个，<strong>乐观锁，悲观锁。乐观锁：每次执行事务的时候都是先执行在检查是否有其他是否在执行。而悲观锁如行锁，表锁，都是先锁定再执行事务。通常在并发量比较大的情况下用悲观锁，并发量小的情况下用乐观锁</strong></li>
+<li>说一下synchronied和ReentrantLock的区别<br> <br><strong>synchronied是JVM级别的，而ReentrantLock是api级别的，JVM会对synchronied做出相应的优化，锁消除：当JVM判定该资源不会被其他线程争夺的时候就会消除该锁，还有锁自旋，自适应锁</strong>（面试官速度很快，还没等我来得及解释ReentrantLock就跳下一个问题了，也许是这个超底层的回答比较满意吧）</li>
+<li>讲一下ThreadLoacal吧<br><br><strong>ThreadLocal底层实现是一个Map结构的表，key是Thread.currentThread（）,而Value则是我们想要保存的对象</strong></li>
+<li>它（ThreadLocal）有什么用，可以举一个例子吗？<br><br><strong>可以在每个线程都拥有一个各自的副本，封装起来不被影响，作用的话，可以做一个类似卖票的系统，每个售票厅（线程）只能出售100张票，不能多不能少</strong></li>
+<li>用过exchange（）吗<br><br><strong>不好意思，只敲过一次例子，不太了解</strong></li>
+<li>说一说JVM内存模型吧<br><br><strong>我：栈区：每次方法的执行都会有一次栈帧的生成，并且其中有局部变量表。堆区：每次new出来的对象都保存在这儿。本地方法栈：通过C/C++调用系统接口的一些方法，方法区：类的信息 静态变量都在这儿，还有程序计数器</strong></li>
+<li>说一说AOP吧</li>
+<li><strong>AOP就是面向切面编程，并解释了下列术语，joinpoint，pointcut，aspect，advice，并说了一下实现的原理，若实现了接口就是JDK动态代理否则就用CGLIB</strong></li>
+<li>了解asm吗？<br><br><strong>我反应了半天才想起这是一个jar包，不过从没了解过就说不知道了</strong></li>
+<li>String str1=new String(“abc”),String str2=new String(“abc”); str1==str2返回什么<br><strong>当时太紧张，注意力一直放在abc字符串上了忽略了这是new了一个对象，一直回答true，反问我很久我还是没反应过来，有点没发挥好</strong></li>
+<li>知道如何让线程同步吗？<br><br><strong>wait，notify，notifyAll，await，signal，siganlAll，countdownLatch，cyclicbarrer</strong></li>
+<li>说一说countdownlatch，cyclicbarrer<br><br><strong>都可以等几个线程就绪后再执行后续操作，区别就是cyclicbarrer是可以复用的，而countdownlatch不可以</strong></li>
+<li>举个例子？<br><br><strong>可以假设以下场景，等9个跑步选手（线程）同时在起跑线就绪了再开始起跑</strong></li>
+<li>可以实习多久</li>
+<li>你的职业规划</li>
+<li>你有什么想问我的吗？<br><h6 id="最后面试官简单评价了一下：看得出来你平时看了很多书，不过前面有一两个答错了，你开始很紧张，后来好了一些。"><a href="#最后面试官简单评价了一下：看得出来你平时看了很多书，不过前面有一两个答错了，你开始很紧张，后来好了一些。" class="headerlink" title="最后面试官简单评价了一下：看得出来你平时看了很多书，不过前面有一两个答错了，你开始很紧张，后来好了一些。"></a>最后面试官简单评价了一下：看得出来你平时看了很多书，不过前面有一两个答错了，你开始很紧张，后来好了一些。</h6><h3 id="二面（14min）"><a href="#二面（14min）" class="headerlink" title="二面（14min）"></a>二面（14min）</h3></li>
 <li>自我介绍</li>
 <li>讲一下hashmap吧</li>
 <li><strong>hashmap底层是一个key-value结构的entry数组+链表，在put的时候根据key的hashcode的值在hash一次，然后根据得到 的hash值再和hashmap的size取余操作定位到要插入的哈希桶，如果为null则插入，否则遍历哈希桶后面的链表如果有key相等的则覆盖，否则添加到尾部，然后检查是否达到treshold需要扩容，并且每次扩容都是扩大两倍</strong></li>
@@ -326,9 +306,9 @@
 <li>说一说你的项目中登录是怎么做的<br><strong>大概就是redis做验证码缓存，MD5加密密码（有点长。。省略）</strong></li>
 <li>说说cookie和session吧<br><strong>session来自于cookie，session可以放在cookie里，并且cookie存在客户端，session存在服务器端</strong>（简单回答）</li>
 <li>你说你用过redis，那你知道redis可以做持久化吗？<br><br><strong>可以</strong></li>
-<li>哪两种？<br><br><strong>RDB 和 AOF</strong></li>
+<li>哪两种？<br><br><strong>RDB 和 AOF</strong><h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3></li>
 </ul>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ol>
+<ol>
 <li>一面有点紧张，没发挥好，不过能从底层回答的都从底层回答了，问的浅，答得较深</li>
 <li>二面运气不错，恰好问到了擅长的部分，问的是要比一面更难,不过还算是答的比较好</li>
 <li>最后感谢程涛学长提供的内推机会，以及一直以来在Java学习上的帮助！</li>
@@ -344,7 +324,7 @@
         <p><span>本文标题:</span><a href="/2017/10/18/网易考拉海购Java后台开发实习-面经（已拿offer）/">网易考拉海购Java后台开发实习-面经（已拿offer）</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">杨凯文</a></p>
         <p><span>发布时间:</span>2017-10-18, 20:21:53</p>
-        <p><span>最后更新:</span>2018-10-05, 23:11:13</p>
+        <p><span>最后更新:</span>2018-10-30, 12:10:43</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2017/10/18/网易考拉海购Java后台开发实习-面经（已拿offer）/" title="网易考拉海购Java后台开发实习-面经（已拿offer）">http://yangkw.github.io/2017/10/18/网易考拉海购Java后台开发实习-面经（已拿offer）/</a>
             <span class="copy-path" data-clipboard-text="原文: http://yangkw.github.io/2017/10/18/网易考拉海购Java后台开发实习-面经（已拿offer）/　　作者: 杨凯文" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
