@@ -275,7 +275,7 @@
           
         <h2 id="有什么用？"><a href="#有什么用？" class="headerlink" title="有什么用？"></a>有什么用？</h2><p>在MySQL中，当数据量增长的特别大的时候就需要用到索引来优化SQL语句，而如何才能判断我们辛辛苦苦写出的SQL语句是否优良？这时候<strong>explain</strong>就派上了用场。</p>
 <a id="more"></a>
-<h2 id="怎么使用？"><a href="#怎么使用？" class="headerlink" title="怎么使用？"></a>怎么使用？</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">explain</span> + <span class="keyword">SQL</span>语句即可 如：<span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">table</span>;</span><br></pre></td></tr></table></figure>
+<h2 id="怎么使用？"><a href="#怎么使用？" class="headerlink" title="怎么使用？"></a>怎么使用？</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">explain + SQL语句即可 如：explain select * from table;</span><br></pre></td></tr></table></figure>
 <p>如下<br><img src="http://img.blog.csdn.net/20170915234639090?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvZ290b2JhdA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="explain参数"></p>
 <p>相信第一次使用explain参数的朋友一定会疑惑这一大堆参数究竟有什么用呢？笔者搜集了一些资料，在这儿做一个总结希望能够帮助大家理解。</p>
 <h3 id="参数介绍"><a href="#参数介绍" class="headerlink" title="参数介绍"></a>参数介绍</h3><h3 id="id"><a href="#id" class="headerlink" title="id"></a>id</h3><pre><code>如果是子查询，id的序号会递增，id的值越大优先级越高，越先被执行
