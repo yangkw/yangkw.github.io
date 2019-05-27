@@ -15,24 +15,25 @@
 
 
 
-<meta name="description" content="前言最近在看《实战Java虚拟机》,发现书上的一个关于局部变量表GC挺有意思，先上代码。">
-<meta name="keywords" content="Java,JVM">
+<meta name="description" content="前言于每一个Java工程师而言，tomcat这只小橘猫算是我们的老朋友了，同时tomcat作为一款服务器中间件具备了很强的扩展性，内部对于Request和Response的逻辑处理都是何种方式来实现的呢？本文将主要介绍tomcat的Pipeline-Valve设计来一窥究竟。">
+<meta name="keywords" content="Java,Tomcat">
 <meta property="og:type" content="article">
-<meta property="og:title" content="一次有趣的局部变量GC">
-<meta property="og:url" content="http://yangkw.com/2018/10/29/一次有趣的局部变量GC/index.html">
+<meta property="og:title" content="吸猫就吸Tomcat之Pipeline-Valve巧妙设计">
+<meta property="og:url" content="http://yangkw.com/2019/05/26/吸猫就吸Tomcat之Pipeline-Valve巧妙设计/index.html">
 <meta property="og:site_name" content="Kevin&#39;s Blog">
-<meta property="og:description" content="前言最近在看《实战Java虚拟机》,发现书上的一个关于局部变量表GC挺有意思，先上代码。">
+<meta property="og:description" content="前言于每一个Java工程师而言，tomcat这只小橘猫算是我们的老朋友了，同时tomcat作为一款服务器中间件具备了很强的扩展性，内部对于Request和Response的逻辑处理都是何种方式来实现的呢？本文将主要介绍tomcat的Pipeline-Valve设计来一窥究竟。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6ede3a3ee5.png">
-<meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6eed22745f.png">
-<meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6efd17f2c2.png">
-<meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6f128c4e2e.png">
-<meta property="og:image" content="https://i.loli.net/2018/10/29/5bd6fb2db51fc.jpg">
-<meta property="og:updated_time" content="2018-10-29T12:26:36.833Z">
+<meta property="og:image" content="https://i.loli.net/2019/05/27/5ceb3e292db2991850.png">
+<meta property="og:image" content="https://i.loli.net/2019/05/27/5ceb3e29223a099160.png">
+<meta property="og:image" content="https://i.loli.net/2019/05/27/5ceb3e2b1da8490566.png">
+<meta property="og:image" content="https://i.loli.net/2019/05/27/5ceb3e2956bc515073.png">
+<meta property="og:image" content="https://i.loli.net/2019/05/27/5ceb3e2ab997017358.png">
+<meta property="og:image" content="https://static001.geekbang.org/resource/image/b0/ca/b014ecce1f64b771bd58da62c05162ca.jpg">
+<meta property="og:updated_time" content="2019-05-27T01:37:57.071Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="一次有趣的局部变量GC">
-<meta name="twitter:description" content="前言最近在看《实战Java虚拟机》,发现书上的一个关于局部变量表GC挺有意思，先上代码。">
-<meta name="twitter:image" content="https://i.loli.net/2018/10/29/5bd6ede3a3ee5.png">
+<meta name="twitter:title" content="吸猫就吸Tomcat之Pipeline-Valve巧妙设计">
+<meta name="twitter:description" content="前言于每一个Java工程师而言，tomcat这只小橘猫算是我们的老朋友了，同时tomcat作为一款服务器中间件具备了很强的扩展性，内部对于Request和Response的逻辑处理都是何种方式来实现的呢？本文将主要介绍tomcat的Pipeline-Valve设计来一窥究竟。">
+<meta name="twitter:image" content="https://i.loli.net/2019/05/27/5ceb3e292db2991850.png">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
@@ -64,7 +65,7 @@
 <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 
 
-<title>一次有趣的局部变量GC | Kevin&#39;s Blog</title>
+<title>吸猫就吸Tomcat之Pipeline-Valve巧妙设计 | Kevin&#39;s Blog</title>
 
 <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
@@ -237,11 +238,11 @@
     </div>
     <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
 </nav>
-      <div class="body-wrap"><article id="post-一次有趣的局部变量GC" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-吸猫就吸Tomcat之Pipeline-Valve巧妙设计" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2018/10/29/一次有趣的局部变量GC/" class="article-date">
-      <time datetime="2018-10-29T12:24:50.000Z" itemprop="datePublished">2018-10-29</time>
+      <a href="/2019/05/26/吸猫就吸Tomcat之Pipeline-Valve巧妙设计/" class="article-date">
+      <time datetime="2019-05-26T05:14:13.000Z" itemprop="datePublished">2019-05-26</time>
 </a>
 
 
@@ -256,7 +257,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      一次有趣的局部变量GC
+      吸猫就吸Tomcat之Pipeline-Valve巧妙设计
     </h1>
   
 
@@ -267,7 +268,7 @@
 
         
     <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li></ul>
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Tomcat/">Tomcat</a></li></ul>
     </div>
 
         <div class="clearfix"></div>
@@ -277,24 +278,49 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>最近在看《实战Java虚拟机》,发现书上的一个关于局部变量表GC挺有意思，先上代码。<br><a id="more"></a></p>
-<h3 id="主角"><a href="#主角" class="headerlink" title="主角"></a>主角</h3><h4 id="没有GC"><a href="#没有GC" class="headerlink" title="没有GC"></a>没有GC</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">reversion</span><span class="params">()</span></span>&#123;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">byte</span>[] a = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">6</span>*<span class="number">1024</span>*<span class="number">1024</span>];</span><br><span class="line">        &#125;</span><br><span class="line">        System.gc();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        reversion();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>分配了一块6MB的堆空间，并使用局部变量引用这块空间, 然后显式进行一次Full GC。</p>
-<p><img src="https://i.loli.net/2018/10/29/5bd6ede3a3ee5.png" alt="image-20181029192234982"></p>
-<p>先配置一下JVM参数用于打印GC log</p>
-<p><img src="https://i.loli.net/2018/10/29/5bd6eed22745f.png" alt=""></p>
-<p>可以看到这块6MB的堆空间并没有被回收, 接下来加一行代码就能使得堆空间被回收。</p>
-<h4 id="可以GC"><a href="#可以GC" class="headerlink" title="可以GC"></a>可以GC</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">reversion</span><span class="params">()</span></span>&#123;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">byte</span>[] a = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">6</span>*<span class="number">1024</span>*<span class="number">1024</span>];</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> c = <span class="number">0</span>;</span><br><span class="line">        System.gc();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        reversion();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="https://i.loli.net/2018/10/29/5bd6efd17f2c2.png" alt=""></p>
-<p>可以看到这6MB的空间已经被回收了，仅仅因为多了一句看似与a毫无关系的 <strong>int c = 0;</strong> </p>
-<h3 id="答案"><a href="#答案" class="headerlink" title="答案"></a>答案</h3><p>借助jclasslib工具我们进一步查看函数的局部变量信息, 在此之前我们需要对代码做一点小改动再进行分析</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">reversion</span><span class="params">()</span></span>&#123;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">byte</span>[] a = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">6</span>*<span class="number">1024</span>*<span class="number">1024</span>];</span><br><span class="line">            System.out.println(a[<span class="number">0</span>]);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> c = <span class="number">0</span>;</span><br><span class="line">        System.gc();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        reversion();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><strong>tips</strong>：JVM即时编译器拥有<strong>死代码消除</strong>的特性，a数组并没有被任何地方使用，即时编译器可以精简数据流，并且减少编译时间以及最终生成机器码的大小。简单的说如果a没有被使用的话会被编译成var0, 我们在本地变量表中看不到a了。</p>
-<p><img src="https://i.loli.net/2018/10/29/5bd6f128c4e2e.png" alt=""></p>
-<p>可以看到a和c在局部变量表中的索引值都是0，也就是说c重用了a在局部变量表中的槽位，从而使得a指向的堆空间能够被GC回收</p>
-<p><strong>栈帧中的局部变量表中的槽位是可以重用的，如果一个局部变量过了其作用域，那么在其作用域之后申明的新的局部变量就很有可能复用过期局部变量的槽位，从而达到节省资源的目的</strong></p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>通过这个GC的小例子，切实感受到了JVM对于资源节省的严苛程度，对于作用域的细粒度把控之强大。给大家推荐我读的这本《实战Java虚拟机》，切实的一本好书，所谓好书无非两点：1.能读懂 2.有所获。同时也推荐极客时间的《深入拆解虚拟机》，多路学习，兼听则明。</p>
-<p>最后打个小广告～<img src="https://i.loli.net/2018/10/29/5bd6fb2db51fc.jpg" alt=""></p>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>于每一个Java工程师而言，tomcat这只小橘猫算是我们的老朋友了，同时tomcat作为一款服务器中间件具备了很强的扩展性，内部对于Request和Response的逻辑处理都是何种方式来实现的呢？本文将主要介绍tomcat的Pipeline-Valve设计来一窥究竟。<br><a id="more"></a></p>
+<h2 id="接口介绍"><a href="#接口介绍" class="headerlink" title="接口介绍"></a>接口介绍</h2><p>首先我们看看Valve接口</p>
+<p><img src="https://i.loli.net/2019/05/27/5ceb3e292db2991850.png" alt="image-20190526123653021"></p>
+<p>可以从Valve看到很多链表的影子，我们可以根据Valve来构造一条Valve链。接下来看看Pipeline接口</p>
+<p>Pipeline接口的主要方法</p>
+<p><img src="https://i.loli.net/2019/05/27/5ceb3e29223a099160.png" alt="image-20190526120956032"></p>
+<p>可以看到Pipeline的主要方法提供了对Valve的增删查改操作，其中有两个关键的方法setBasic(Valve)与addValve(Valve)我们跟进源码看一看。其中StandardPipeline是Pipeline接口的实现类，下面我截取了setBasic最核心的逻辑，可以看出basic实际上就是Pipeline维护的Valve链里最末尾的一个Valve</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Valve current = first;</span><br><span class="line"><span class="keyword">while</span> (current != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (current.getNext() == oldBasic) &#123;</span><br><span class="line">        current.setNext(valve);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    current = current.getNext();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">this</span>.basic = valve;</span><br></pre></td></tr></table></figure>
+<p>同样的我们来看一看addValve的源码，以下是最核心的部分</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Valve current = first;</span><br><span class="line"><span class="keyword">while</span> (current != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (current.getNext() == basic) &#123;</span><br><span class="line">        current.setNext(valve);</span><br><span class="line">        valve.setNext(basic);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>通过addValve添加的Valve被加在了basic的前一个，也就是说basic永远指向Valve链里的最后一个Valve，不会被轻易替代，那么这种设计有什么意义呢？待会给出答案~</p>
+<h2 id="Valve到底是什么？"><a href="#Valve到底是什么？" class="headerlink" title="Valve到底是什么？"></a>Valve到底是什么？</h2><p><img src="https://i.loli.net/2019/05/27/5ceb3e2b1da8490566.png" alt="image-20190526133007212"></p>
+<p>上图都是Valve接口的实现类，包含了负载均衡、单点登录等tomcat容器本身的逻辑。通过查看Valve接口invoke方法的实现可以知道，每一个Valve的invoke方法主要做两件事情</p>
+<ol>
+<li>本身的逻辑</li>
+<li>通过getNext().invoke(request, response)调用下一个Valve的逻辑</li>
+</ol>
+<p>这是很经典的责任链设计模式。简单的说一个valve就是一个逻辑体。</p>
+<h2 id="跟踪basic"><a href="#跟踪basic" class="headerlink" title="跟踪basic"></a>跟踪basic</h2><p><img src="https://i.loli.net/2019/05/27/5ceb3e2956bc515073.png" alt="image-20190526125355280"></p>
+<p>可以看到setBasic的使用方主要是tomcat内置的四大容器，Context、Engine、Host以及Wrapper，先简单对四大容器做个介绍</p>
+<ul>
+<li>Wrapper：对Servlet定义的组件概念，一个Wrapper代表一个Servlet</li>
+<li>Context：表示我们的应用程序，比如一个运行中Java Web程序，一个程序里面自然有多个Servlet，所以Conxtet和Wrapper的关系是1对n</li>
+<li>Host：表示虚拟主机的概念，因为一台服务器不仅能够对product.yangkw.com提供服务，同时也可以对test.yangkw.com提供服务，同时每个虚拟主机都可以运行多个Java Web程序，所以Host和Context的关系也是1对n</li>
+<li>Engine：Tomcat连接器(Connector) 将接收到的连接提交给Engine处理，作为整个Servlet引擎的组件概念，用来管理多个虚拟站点，Engine和Host也是一对n的关系</li>
+</ul>
+<p>下面是关于四大容器一个简单的类图关系</p>
+<p><img src="https://i.loli.net/2019/05/27/5ceb3e2ab997017358.png" alt="image-20190526131102483"></p>
+<p>那么四大容器是如何被关联在一起的呢？StandardEngineValve是Engine容器的basic valve，笔者简化了代码实现，保留最主要的逻辑</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">invoke</span><span class="params">(Request request, Response response)</span></span></span><br><span class="line"><span class="function">    <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Select the Host to be used for this Request</span></span><br><span class="line">    Host host = request.getHost();</span><br><span class="line"></span><br><span class="line">		...</span><br><span class="line">      </span><br><span class="line">    <span class="comment">// Ask this Host to process this request</span></span><br><span class="line">    host.getPipeline().getFirst().invoke(request, response);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到Engine容器的basic valve负责触发host容器pipeline 答案出来了：<strong>每个容器的basic valve会去触发子容器的pipeline</strong>，所以basic作为一个valve不仅要执行自身相应的逻辑，同时也扮演了一个外交官的角色负责去和其子容器逻辑的对接。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><img src="https://static001.geekbang.org/resource/image/b0/ca/b014ecce1f64b771bd58da62c05162ca.jpg" alt="img"></p>
+<ul>
+<li>pipeline可以看做是valve的容器</li>
+<li>四大容器里每个容器都维护有自身专属的pipeline</li>
+<li>basic负责触发子容器的第一个valve</li>
+<li>wrapper的basic会去调用filter，然后再执行servlet的逻辑</li>
+<li>FilterChain和Pipeline-Valve很相似，区别是filterChain是业务层面里的而Pipeline-Valve是tomcat自身层面的。</li>
+</ul>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li>《Tomcat 架构解析》</li>
+<li>极客时间《深入拆解Tomcat&amp;Jetty》</li>
+</ul>
 
       
     </div>
@@ -303,13 +329,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2018/10/29/一次有趣的局部变量GC/">一次有趣的局部变量GC</a></p>
+        <p><span>本文标题:</span><a href="/2019/05/26/吸猫就吸Tomcat之Pipeline-Valve巧妙设计/">吸猫就吸Tomcat之Pipeline-Valve巧妙设计</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">杨凯文</a></p>
-        <p><span>发布时间:</span>2018-10-29, 20:24:50</p>
-        <p><span>最后更新:</span>2018-10-29, 20:26:36</p>
+        <p><span>发布时间:</span>2019-05-26, 13:14:13</p>
+        <p><span>最后更新:</span>2019-05-27, 09:37:57</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2018/10/29/一次有趣的局部变量GC/" title="一次有趣的局部变量GC">http://yangkw.com/2018/10/29/一次有趣的局部变量GC/</a>
-            <span class="copy-path" data-clipboard-text="原文: http://yangkw.com/2018/10/29/一次有趣的局部变量GC/　　作者: 杨凯文" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2019/05/26/吸猫就吸Tomcat之Pipeline-Valve巧妙设计/" title="吸猫就吸Tomcat之Pipeline-Valve巧妙设计">http://yangkw.com/2019/05/26/吸猫就吸Tomcat之Pipeline-Valve巧妙设计/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yangkw.com/2019/05/26/吸猫就吸Tomcat之Pipeline-Valve巧妙设计/　　作者: 杨凯文" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
         <p>
@@ -321,16 +347,10 @@
 
     <nav id="article-nav">
         
-            <div id="article-nav-newer" class="article-nav-title">
-                <a href="/2019/05/26/吸猫就吸Tomcat之Pipeline-Valve巧妙设计/">
-                    吸猫就吸Tomcat之Pipeline-Valve巧妙设计
-                </a>
-            </div>
-        
         
             <div id="article-nav-older" class="article-nav-title">
-                <a href="/2018/10/28/设计模式要点总结/">
-                    常见设计模式要点总结
+                <a href="/2018/10/29/一次有趣的局部变量GC/">
+                    一次有趣的局部变量GC
                 </a>
             </div>
         
@@ -342,7 +362,7 @@
     <div id="toc" class="toc-article">
         <strong class="toc-title">文章目录</strong>
         
-            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#主角"><span class="toc-number">2.</span> <span class="toc-text">主角</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#没有GC"><span class="toc-number">2.1.</span> <span class="toc-text">没有GC</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#可以GC"><span class="toc-number">2.2.</span> <span class="toc-text">可以GC</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#答案"><span class="toc-number">3.</span> <span class="toc-text">答案</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#接口介绍"><span class="toc-number">2.</span> <span class="toc-text">接口介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Valve到底是什么？"><span class="toc-number">3.</span> <span class="toc-text">Valve到底是什么？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#跟踪basic"><span class="toc-number">4.</span> <span class="toc-text">跟踪basic</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考资料"><span class="toc-number">6.</span> <span class="toc-text">参考资料</span></a></li></ol>
         
     </div>
     <style>
@@ -378,7 +398,7 @@
         </div>
         <script>
             window._bd_share_config={
-                "common":{"bdSnsKey":{},"bdText":"一次有趣的局部变量GC　| Kevin's Blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+                "common":{"bdSnsKey":{},"bdText":"吸猫就吸Tomcat之Pipeline-Valve巧妙设计　| Kevin's Blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
         </script>
     
 
@@ -398,15 +418,13 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2019/05/26/吸猫就吸Tomcat之Pipeline-Valve巧妙设计/" title="上一篇: 吸猫就吸Tomcat之Pipeline-Valve巧妙设计">
-                <i class="fa fa-angle-left"></i>
-            </a>
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
 
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
 
         
-            <a href="/2018/10/28/设计模式要点总结/" title="下一篇: 常见设计模式要点总结">
+            <a href="/2018/10/29/一次有趣的局部变量GC/" title="下一篇: 一次有趣的局部变量GC">
                 <i class="fa fa-angle-right"></i>
             </a>
         
